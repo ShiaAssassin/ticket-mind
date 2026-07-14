@@ -10,7 +10,7 @@ TicketMind 是一个智能购票助手，用户只需用日常语言告诉它出
 
 核心价值在于 **"托管式购票体验"**——您提需求，Agent帮您执行，无需手动刷票和反复填表。
 
-本项目基于最小 Spring Boot + LangChain4j agent 应用框架构建。
+本项目基于多模块 Spring Boot 工程构建，包含主业务应用和独立的 MCP Server 部署模块。
 
 ---
 
@@ -71,8 +71,21 @@ TicketMind 是一个智能购票助手，用户只需用日常语言告诉它出
 - Maven 3.6+
 - OpenAI API Key（或兼容接口）
 
+### 模块说明
+
+- `ticket-mind-core`：原有主业务应用，负责 Agent、业务逻辑、数据访问和 HTTP 接口。
+- `mcp-server`：独立部署的 MCP 服务模块，专门承载对外暴露的工具服务。
+
 ### 运行
+
+启动主应用：
 
 ```bash
 export OPENAI_API_KEY=你的密钥
-mvn spring-boot:run
+mvn -pl ticket-mind-core spring-boot:run
+```
+
+启动 MCP Server：
+
+```bash
+mvn -pl mcp-server spring-boot:run

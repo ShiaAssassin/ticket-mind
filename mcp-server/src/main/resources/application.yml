@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: mcp-server
+
+server:
+  port: ${SERVER_PORT:18080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+ticket-mind:
+  mcp:
+    transport: ${TICKET_MIND_MCP_TRANSPORT:sse}
+    server-name: ${TICKET_MIND_MCP_SERVER_NAME:ticket-mind-mcp-server}
+    server-version: ${TICKET_MIND_MCP_SERVER_VERSION:0.0.1-SNAPSHOT}
