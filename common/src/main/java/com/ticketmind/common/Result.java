@@ -55,4 +55,3 @@ public class Result<T> implements Serializable {
         return new Result<>(resultCode.getCode(), resultCode.getMessage(), null);
     }
 }
-

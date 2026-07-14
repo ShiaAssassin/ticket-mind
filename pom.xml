@@ -19,6 +19,7 @@
     <description>Parent project for TicketMind application and MCP server modules.</description>
 
     <modules>
+        <module>common</module>
         <module>ticket-mind-core</module>
         <module>mcp-server</module>
     </modules>
