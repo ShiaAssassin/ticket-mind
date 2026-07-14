@@ -14,6 +14,8 @@ public class AgentProperties {
 
     private final Knowledge knowledge = new Knowledge();
 
+    private final Chroma chroma = new Chroma();
+
     @Data
     public static class Chat {
         private int historyLimit = 10;
@@ -23,11 +25,15 @@ public class AgentProperties {
     @Data
     public static class Knowledge {
         private int topK = 4;
-        private boolean useChroma;
-        private String chromaBaseUrl = "http://localhost:8000";
-        private String chromaCollection = "multimodalAgent_knowledge";
         private int chunkSize = 512;
         private int chunkOverlap = 64;
+    }
+
+    @Data
+    public static class Chroma {
+        private boolean enabled = true;
+        private String baseUrl = "http://localhost:8000";
+        private String collection = "multimodalAgent_knowledge";
     }
 
 }

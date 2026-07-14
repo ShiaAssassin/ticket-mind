@@ -5,12 +5,6 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-
 langchain4j:
   open-ai:
     chat-model:
@@ -18,6 +12,11 @@ langchain4j:
       base-url: ${OPENAI_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
       model-name: ${OPENAI_MODEL:qwen-plus}
       temperature: ${OPENAI_TEMPERATURE:0.2}
+    embedding-model:
+      api-key: ${OPENAI_API_KEY:}
+      base-url: ${OPENAI_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+      model-name: ${OPENAI_EMBEDDING_MODEL:text-embedding-v2}  # 阿里云百炼嵌入模型
+      timeout: 30s
 
 ticket-mind:
   chat:
@@ -25,8 +24,9 @@ ticket-mind:
     short-memory-ttl-hours: ${CHAT_SHORT_MEMORY_TTL_HOURS:24}
   knowledge:
     top-k: ${RAG_TOP_K:4}
-    use-chroma: ${USE_CHROMA:true}
-    chroma-base-url: ${CHROMA_BASE_URL:http://localhost:8000}
-    chroma-collection: ${CHROMA_COLLECTION:multimodalAgent_knowledge}
     chunk-size: ${KNOWLEDGE_CHUNK_SIZE:512}
     chunk-overlap: ${KNOWLEDGE_CHUNK_OVERLAP:64}
+  chroma:
+    enabled: ${CHROMA_ENABLED:true}
+    base-url: ${CHROMA_BASE_URL:http://localhost:8000}
+    collection: ${CHROMA_COLLECTION:multimodalAgent_knowledge}
