@@ -1,4 +1,4 @@
-package com.ticketmind.service;
+package com.ticketmind.service.impl;
 
 import com.ticketmind.config.AgentProperties;
 import com.ticketmind.model.dto.SkillSearchResult;

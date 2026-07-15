@@ -1,4 +1,4 @@
-package com.ticketmind.agent.memory;
+package com.ticketmind.service.memory;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -38,7 +38,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class SkillChromaInitializer implements ApplicationRunner {
 
-    private static final String SKILL_RESOURCE_PATTERN = "classpath*:com/ticketmind/agent/skill/**/SKILL.md";
+    private static final String SKILL_RESOURCE_PATTERN = "classpath*:skills/**/SKILL.md";
     private static final String SKILL_FILENAME = "SKILL.md";
     private static final int DELETE_BATCH_SIZE = 100;
 
@@ -257,7 +257,7 @@ public class SkillChromaInitializer implements ApplicationRunner {
 
     private String resolveResourcePath(Resource resource) throws IOException {
         String uri = resource.getURI().toString();
-        int markerIndex = uri.indexOf("/com/ticketmind/agent/skill/");
+        int markerIndex = uri.indexOf("/skills/");
         if (markerIndex >= 0) {
             return uri.substring(markerIndex + 1);
         }
@@ -266,13 +266,13 @@ public class SkillChromaInitializer implements ApplicationRunner {
 
     private String toResourcePath(Path skillFile) {
         String normalized = skillFile.toAbsolutePath().normalize().toString().replace('\\', '/');
-        String sourceRootMarker = "/src/main/java/";
+        String sourceRootMarker = "/src/main/resources/";
         int sourceRootIndex = normalized.indexOf(sourceRootMarker);
         if (sourceRootIndex >= 0) {
             return normalized.substring(sourceRootIndex + sourceRootMarker.length());
         }
 
-        int markerIndex = normalized.indexOf("/com/ticketmind/agent/skill/");
+        int markerIndex = normalized.indexOf("/skills/");
         if (markerIndex >= 0) {
             return normalized.substring(markerIndex + 1);
         }
@@ -282,7 +282,7 @@ public class SkillChromaInitializer implements ApplicationRunner {
 
     private String extractSkillName(String resourcePath) {
         String normalized = resourcePath.replace('\\', '/');
-        String marker = "/agent/skill/";
+        String marker = "skills/";
         int markerIndex = normalized.indexOf(marker);
         if (markerIndex < 0) {
             return normalized;
