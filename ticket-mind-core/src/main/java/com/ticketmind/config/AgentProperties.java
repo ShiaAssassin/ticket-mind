@@ -3,9 +3,6 @@ package com.ticketmind.config;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Data
 @ConfigurationProperties(prefix = "ticket-mind")
 public class AgentProperties {
@@ -33,7 +30,10 @@ public class AgentProperties {
     public static class Chroma {
         private boolean enabled = true;
         private String baseUrl = "http://localhost:8000";
-        private String collection = "multimodalAgent_knowledge";
+        private String knowledgeCollection = "ticket-mind-knowledge";
+        private String skillCollection = "ticket-mind-skill";
+        private String skillRootPath = "ticket-mind-core/src/main/java/com/ticketmind/agent/skill";
+        private boolean skillWatchEnabled = true;
     }
 
 }

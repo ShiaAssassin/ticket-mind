@@ -29,4 +29,7 @@ ticket-mind:
   chroma:
     enabled: ${CHROMA_ENABLED:true}
     base-url: ${CHROMA_BASE_URL:http://localhost:8000}
-    collection: ${CHROMA_COLLECTION:multimodalAgent_knowledge}
+    knowledge-collection: ${CHROMA_COLLECTION:ticket-mind-knowledge}
+    skill-collection: ${CHROMA_SKILL_COLLECTION:ticket-mind-skill}
+    skill-root-path: ${CHROMA_SKILL_ROOT_PATH:ticket-mind-core/src/main/java/com/ticketmind/agent/skill}
+    skill-watch-enabled: ${CHROMA_SKILL_WATCH_ENABLED:true}
