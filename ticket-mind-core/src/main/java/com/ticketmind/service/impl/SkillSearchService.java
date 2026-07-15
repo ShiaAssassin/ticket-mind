@@ -25,7 +25,9 @@ public class SkillSearchService {
     private static final double DEFAULT_MIN_SCORE = 0.6D;
 
     private final AgentProperties agentProperties;
+
     private final ChromaClient chromaClient;
+
     private final EmbeddingModel embeddingModel;
 
     public List<SkillSearchResult> searchSkills(String query, double min_score) {
