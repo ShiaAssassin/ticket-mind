@@ -12,5 +12,5 @@ public interface NotificationAgent {
             语气务必直接、实用。
             只输出纯文本，不要输出 Markdown。
             """)
-    String composeNotification(@UserMessage String eventContext);
+    String notify(@UserMessage String eventContext);
 }

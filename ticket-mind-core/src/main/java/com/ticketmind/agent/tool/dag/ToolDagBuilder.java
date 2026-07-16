@@ -1,4 +1,4 @@
-package com.ticketmind.agent.tool;
+package com.ticketmind.agent.tool.dag;
 
 import com.ticketmind.common.BusinessException;
 import com.ticketmind.common.ResultCode;
