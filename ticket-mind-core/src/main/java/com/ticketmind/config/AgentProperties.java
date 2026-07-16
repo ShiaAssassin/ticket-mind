@@ -13,6 +13,8 @@ public class AgentProperties {
 
     private final Chroma chroma = new Chroma();
 
+    private final Rabbitmq rabbitmq = new Rabbitmq();
+
     @Data
     public static class Chat {
         private int historyLimit = 10;
@@ -34,6 +36,14 @@ public class AgentProperties {
         private String skillCollection = "ticket-mind-skill";
         private String skillRootPath = "ticket-mind-core/src/main/resources/skills";
         private boolean skillWatchEnabled = true;
+    }
+
+    @Data
+    public static class Rabbitmq {
+        private boolean enabled = false;
+        private String knowledgeUploadExchange = "ticket-mind.knowledge.exchange";
+        private String knowledgeUploadQueue = "ticket-mind.knowledge.uploaded.queue";
+        private String knowledgeUploadRoutingKey = "knowledge.uploaded";
     }
 
 }

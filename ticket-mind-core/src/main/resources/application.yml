@@ -1,6 +1,12 @@
 spring:
   application:
     name: ticket-mind
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VIRTUAL_HOST:/}
 
 server:
   port: ${SERVER_PORT:8080}
@@ -33,3 +39,8 @@ ticket-mind:
     skill-collection: ${CHROMA_SKILL_COLLECTION:ticket-mind-skill}
     skill-root-path: ${CHROMA_SKILL_ROOT_PATH:ticket-mind-core/src/main/resources/skills}
     skill-watch-enabled: ${CHROMA_SKILL_WATCH_ENABLED:true}
+  rabbitmq:
+    enabled: ${RABBITMQ_ENABLED:false}
+    knowledge-upload-exchange: ${RABBITMQ_KNOWLEDGE_UPLOAD_EXCHANGE:ticket-mind.knowledge.exchange}
+    knowledge-upload-queue: ${RABBITMQ_KNOWLEDGE_UPLOAD_QUEUE:ticket-mind.knowledge.uploaded.queue}
+    knowledge-upload-routing-key: ${RABBITMQ_KNOWLEDGE_UPLOAD_ROUTING_KEY:knowledge.uploaded}

@@ -34,7 +34,8 @@ public enum ResultCode {
     UNKNOWN_SERVER_ERROR(50001, "服务器内部出现未知错误", HttpStatus.INTERNAL_SERVER_ERROR),
     OSS_SERVICE_ERROR(50002, "OSS服务异常", HttpStatus.INTERNAL_SERVER_ERROR),
     DATABASE_ERROR(50003, "数据库异常", HttpStatus.INTERNAL_SERVER_ERROR),
-    CACHE_ERROR(50004, "缓存异常", HttpStatus.INTERNAL_SERVER_ERROR);
+    CACHE_ERROR(50004, "缓存异常", HttpStatus.INTERNAL_SERVER_ERROR),
+    MESSAGE_QUEUE_ERROR(50005, "消息队列异常", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final int code;
 

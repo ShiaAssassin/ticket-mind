@@ -6,6 +6,7 @@ import com.ticketmind.common.BusinessException;
 import com.ticketmind.common.ResultCode;
 import com.ticketmind.config.AgentProperties;
 import com.ticketmind.model.dto.KnowledgeChunkHit;
+import com.ticketmind.model.dto.KnowledgeDocumentUploadedEvent;
 import com.ticketmind.model.entity.KnowledgeChunk;
 import com.ticketmind.repository.KnowledgeChunkRepository;
 import com.ticketmind.service.knowledge.KnowledgeChunkProcessor;
@@ -26,11 +27,13 @@ import io.thomasvitale.langchain4j.spring.chroma.api.GetEmbeddingsRequest;
 import io.thomasvitale.langchain4j.spring.chroma.api.GetEmbeddingsResponse;
 import io.thomasvitale.langchain4j.spring.chroma.client.ChromaClient;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -59,6 +62,7 @@ public class KnowledgeService {
     private final KnowledgeChunkRepository knowledgeChunkRepository;
     private final ChromaClient chromaClient;
     private final EmbeddingModel embeddingModel;
+    private final ObjectProvider<KnowledgeUploadEventPublisher> knowledgeUploadEventPublisherProvider;
 
     private final KnowledgeChunkProcessor processor = new KnowledgeChunkProcessor();
 
@@ -106,6 +110,7 @@ public class KnowledgeService {
     @Transactional
     public List<KnowledgeChunk> uploadDocument(String filename, String content) {
         String source = sanitizeSource(filename);
+        String eventFilename = filename;
         if (!StringUtils.hasText(content)) {
             throw new BusinessException(ResultCode.MISSING_REQUIRED_PARAMETER, "知识库文档内容不能为空");
         }
@@ -150,6 +155,7 @@ public class KnowledgeService {
                     payloads.stream().map(ChunkPayload::chunk).toList()
             );
             upsertKnowledgeEmbeddings(savedChunks, payloads);
+            publishKnowledgeUploadEvent(eventFilename, source, savedChunks.size());
             return savedChunks;
         } catch (BusinessException ex) {
             if (agentProperties.getChroma().isEnabled()) {
@@ -446,6 +452,19 @@ public class KnowledgeService {
         String source = filename == null || filename.isBlank() ? "uploaded-knowledge" : filename.trim();
         source = source.replaceAll("[\\\\/]+", "-");
         return source.length() > 180 ? source.substring(source.length() - 180) : source;
+    }
+
+    private void publishKnowledgeUploadEvent(String filename, String source, int chunkCount) {
+        KnowledgeUploadEventPublisher publisher = knowledgeUploadEventPublisherProvider.getIfAvailable();
+        if (publisher == null) {
+            return;
+        }
+        publisher.publishAfterCommit(new KnowledgeDocumentUploadedEvent(
+                filename,
+                source,
+                chunkCount,
+                OffsetDateTime.now()
+        ));
     }
 
     private float[] toFloatArray(List<Double> values) {

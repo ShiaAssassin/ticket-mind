@@ -70,6 +70,7 @@ TicketMind 是一个智能购票助手，用户只需用日常语言告诉它出
 - Java 17+
 - Maven 3.6+
 - OpenAI API Key（或兼容接口）
+- RabbitMQ（仅在启用消息功能时需要）
 
 ### 模块说明
 
@@ -84,6 +85,19 @@ TicketMind 是一个智能购票助手，用户只需用日常语言告诉它出
 export OPENAI_API_KEY=你的密钥
 mvn -pl ticket-mind-core spring-boot:run
 ```
+
+启用 RabbitMQ：
+
+```bash
+export RABBITMQ_ENABLED=true
+export RABBITMQ_HOST=localhost
+export RABBITMQ_PORT=5672
+export RABBITMQ_USERNAME=guest
+export RABBITMQ_PASSWORD=guest
+mvn -pl ticket-mind-core spring-boot:run
+```
+
+启用后，`/knowledge/upload` 上传知识库文档成功会发送一条 `knowledge.uploaded` 消息到默认交换机 `ticket-mind.knowledge.exchange`，并由内置消费者接收。
 
 启动 MCP Server：
 
