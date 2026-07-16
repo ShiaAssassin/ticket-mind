@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ticket Mind</title>
+  <style>
+    :root {
+      --bg: #0f0f10;
+      --panel: #171718;
+      --panel-soft: #202123;
+      --surface: #2a2b2d;
+      --surface-hover: #333437;
+      --line: #38393c;
+      --line-soft: #2a2b2d;
+      --text: #f3f3f3;
+      --muted: #b7b7b8;
+      --subtle: #838487;
+      --inverse: #101010;
+      --white: #ffffff;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+      --radius-lg: 26px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+      --sidebar-width: 304px;
+      color-scheme: dark;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Microsoft YaHei", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.08), transparent 28%),
+        linear-gradient(135deg, #050505 0%, #111 42%, #1d1d1f 100%);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      height: 100vh;
+      min-height: 0;
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      padding: 18px;
+      background: rgba(14, 14, 15, 0.92);
+      border-right: 1px solid var(--line-soft);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 4px 18px;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      color: var(--inverse);
+      background: var(--white);
+      border-radius: 50%;
+      font-weight: 800;
+      letter-spacing: -0.08em;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-subtitle {
+      margin: 2px 0 0;
+      color: var(--subtle);
+      font-size: 12px;
+    }
+
+    .new-chat-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 13px 14px;
+      color: var(--text);
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+    }
+
+    .new-chat-btn:hover {
+      background: var(--surface);
+      border-color: #505154;
+      transform: translateY(-1px);
+    }
+
+    .section-label {
+      margin: 24px 4px 10px;
+      color: var(--subtle);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 6px;
+    }
+
+    .history-item {
+      overflow: hidden;
+      padding: 11px 12px;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      text-align: left;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
+    }
+
+    .history-item.active,
+    .history-item:hover {
+      color: var(--text);
+      background: var(--panel-soft);
+      border-color: var(--line-soft);
+    }
+
+    .side-card {
+      margin-top: auto;
+      padding: 16px;
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+        var(--panel);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow);
+    }
+
+    .side-card h2 {
+      margin: 0 0 10px;
+      font-size: 14px;
+    }
+
+    .side-card p {
+      margin: 0;
+      color: var(--subtle);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .main {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-width: 0;
+      min-height: 0;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 190px),
+        rgba(25, 25, 26, 0.72);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 26px;
+      border-bottom: 1px solid var(--line-soft);
+      backdrop-filter: blur(14px);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      width: 40px;
+      height: 40px;
+      color: var(--text);
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+
+    .model-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--line-soft);
+      border-radius: 999px;
+      font-size: 13px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--text);
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
+    }
+
+    .endpoint {
+      color: var(--subtle);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .chat-area {
+      display: flex;
+      justify-content: center;
+      min-height: 0;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    .chat-column {
+      width: min(920px, 100%);
+      padding: 34px 22px 24px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 18px;
+      padding: 42px 0 32px;
+      text-align: center;
+      animation: rise-in 440ms ease both;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(32px, 6vw, 56px);
+      line-height: 1;
+      letter-spacing: -0.06em;
+    }
+
+    .hero p {
+      width: min(640px, 100%);
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .prompt-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      width: min(720px, 100%);
+      margin: 8px auto 0;
+    }
+
+    .prompt-card {
+      padding: 16px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius-md);
+      text-align: left;
+      transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+    }
+
+    .prompt-card:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.075);
+      border-color: #4d4e51;
+      transform: translateY(-2px);
+    }
+
+    .prompt-card strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .prompt-card span {
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .messages {
+      display: grid;
+      gap: 20px;
+    }
+
+    .message {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      gap: 14px;
+      animation: rise-in 240ms ease both;
+    }
+
+    .avatar {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .message.user .avatar {
+      color: var(--inverse);
+      background: var(--white);
+    }
+
+    .bubble {
+      max-width: 780px;
+      padding: 15px 17px;
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid var(--line-soft);
+      border-radius: 0 var(--radius-md) var(--radius-md);
+      line-height: 1.72;
+      white-space: pre-wrap;
+    }
+
+    .message.user .bubble {
+      margin-left: auto;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md) 0 var(--radius-md) var(--radius-md);
+    }
+
+    .bubble-meta {
+      margin-top: 10px;
+      color: var(--subtle);
+      font-size: 12px;
+    }
+
+    .task-panel {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius-sm);
+    }
+
+    .task-row {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 12px;
+      color: var(--subtle);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .task-row b {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .progress {
+      height: 7px;
+      overflow: hidden;
+      background: var(--surface);
+      border-radius: 999px;
+    }
+
+    .progress-bar {
+      width: 36%;
+      height: 100%;
+      background: linear-gradient(90deg, #777, #f7f7f7);
+      border-radius: inherit;
+      transition: width 240ms ease;
+    }
+
+    .typing {
+      display: inline-flex;
+      gap: 5px;
+      align-items: center;
+      height: 22px;
+    }
+
+    .typing span {
+      width: 6px;
+      height: 6px;
+      background: var(--muted);
+      border-radius: 50%;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    .typing span:nth-child(2) {
+      animation-delay: 120ms;
+    }
+
+    .typing span:nth-child(3) {
+      animation-delay: 240ms;
+    }
+
+    .composer-wrap {
+      display: flex;
+      justify-content: center;
+      padding: 16px 22px 22px;
+      background: linear-gradient(180deg, transparent, rgba(15, 15, 16, 0.92) 24%);
+    }
+
+    .composer {
+      width: min(920px, 100%);
+    }
+
+    .composer-box {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 12px;
+      background: var(--panel-soft);
+      border: 1px solid #46474a;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+    }
+
+    textarea {
+      width: 100%;
+      max-height: 180px;
+      min-height: 28px;
+      padding: 9px 6px 7px 10px;
+      resize: none;
+      color: var(--text);
+      background: transparent;
+      border: 0;
+      outline: 0;
+      line-height: 1.55;
+    }
+
+    textarea::placeholder {
+      color: var(--subtle);
+    }
+
+    .send-btn {
+      align-self: end;
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      color: var(--inverse);
+      background: var(--white);
+      border-radius: 50%;
+      transition: transform 160ms ease, opacity 160ms ease;
+    }
+
+    .send-btn:hover {
+      transform: translateY(-1px) scale(1.03);
+    }
+
+    .send-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.35;
+      transform: none;
+    }
+
+    .composer-hint {
+      margin: 9px 10px 0;
+      color: var(--subtle);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 8;
+    }
+
+    @keyframes rise-in {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%,
+      100% {
+        opacity: 0.35;
+        transform: translateY(0);
+      }
+
+      50% {
+        opacity: 1;
+        transform: translateY(-4px);
+      }
+    }
+
+    @media (max-width: 860px) {
+      body {
+        overflow: hidden;
+      }
+
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: min(84vw, var(--sidebar-width));
+        transform: translateX(-102%);
+        transition: transform 180ms ease;
+        z-index: 10;
+      }
+
+      body.sidebar-open .sidebar {
+        transform: translateX(0);
+      }
+
+      body.sidebar-open .overlay {
+        display: block;
+      }
+
+      .mobile-menu-btn {
+        display: grid;
+        place-items: center;
+      }
+
+      .topbar {
+        padding: 14px 16px;
+      }
+
+      .endpoint {
+        display: none;
+      }
+
+      .chat-column {
+        padding-inline: 16px;
+      }
+
+      .prompt-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .message {
+        grid-template-columns: 32px minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .avatar {
+        width: 32px;
+        height: 32px;
+      }
+
+      .bubble {
+        padding: 13px 14px;
+      }
+
+      .composer-wrap {
+        padding: 12px 12px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay"></div>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="侧边栏">
+      <div class="brand">
+        <div class="brand-mark">TM</div>
+        <div>
+          <h1 class="brand-title">Ticket Mind</h1>
+          <p class="brand-subtitle">票务智能助理</p>
+        </div>
+      </div>
+
+      <button class="new-chat-btn" id="newChatBtn" type="button">
+        <span>+</span>
+        <span>新建对话</span>
+      </button>
+
+      <div class="section-label">Recent</div>
+      <div class="history-list" id="historyList">
+        <button class="history-item active" type="button">当前票务咨询</button>
+      </div>
+
+      <div class="section-label">Reserved</div>
+      <div class="side-card">
+        <h2>任务状态组件</h2>
+        <p>这里预留给后续展示任务拆解、工具调用、订单进度、提醒状态等细粒度执行信息。</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="mobile-menu-btn" id="menuBtn" type="button" aria-label="打开菜单">☰</button>
+        <div class="model-chip">
+          <span class="status-dot"></span>
+          <span>Ticket Mind Assistant</span>
+        </div>
+        <div class="endpoint" id="endpointText"></div>
+      </header>
+
+      <section class="chat-area" id="chatArea" aria-live="polite">
+        <div class="chat-column">
+          <div class="hero" id="hero">
+            <h1>今天想处理什么票务问题？</h1>
+            <p>可以咨询订票、退改签、行程提醒、订单状态和任务规划。页面预留了任务拆解与进度区，后续可直接接入 Agent 执行链路。</p>
+            <div class="prompt-grid">
+              <button class="prompt-card" type="button" data-prompt="帮我查询明天从上海到北京的高铁票，并给出合适的购票建议。">
+                <strong>查询车票</strong>
+                <span>按出发地、目的地、日期生成查询请求。</span>
+              </button>
+              <button class="prompt-card" type="button" data-prompt="帮我拆解一次订票任务：先查票、再筛选车次、最后确认提醒。">
+                <strong>任务拆解</strong>
+                <span>小字展示后续计划、节点和进度。</span>
+              </button>
+              <button class="prompt-card" type="button" data-prompt="我想改签今天下午的订单，帮我分析可选方案。">
+                <strong>改签方案</strong>
+                <span>整理限制、时间窗口和推荐动作。</span>
+              </button>
+              <button class="prompt-card" type="button" data-prompt="帮我创建一个出行提醒，发车前 2 小时提醒我。">
+                <strong>出行提醒</strong>
+                <span>预留提醒任务状态展示入口。</span>
+              </button>
+            </div>
+          </div>
+          <div class="messages" id="messages"></div>
+        </div>
+      </section>
+
+      <form class="composer-wrap" id="chatForm">
+        <div class="composer">
+          <div class="composer-box">
+            <textarea id="messageInput" rows="1" placeholder="给 Ticket Mind 发送消息"></textarea>
+            <button class="send-btn" id="sendBtn" type="submit" aria-label="发送">
+              <svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 4l7 7-1.4 1.4-4.6-4.58V20h-2V7.82L6.4 12.4 5 11l7-7z" fill="currentColor"/>
+              </svg>
+            </button>
+          </div>
+          <p class="composer-hint">Enter 发送，Shift + Enter 换行。接口：POST /api/chat</p>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <script>
+    const BASE_URL = "http://127.0.0.1:8080";
+    const CHAT_PATH = "/api/chat";
+    const CHAT_URL = `${BASE_URL}${CHAT_PATH}`;
+
+    const state = {
+      isSending: false,
+      sessionId: crypto.randomUUID ? crypto.randomUUID() : `session-${Date.now()}`,
+      history: []
+    };
+
+    const chatArea = document.getElementById("chatArea");
+    const chatForm = document.getElementById("chatForm");
+    const endpointText = document.getElementById("endpointText");
+    const hero = document.getElementById("hero");
+    const historyList = document.getElementById("historyList");
+    const menuBtn = document.getElementById("menuBtn");
+    const messageInput = document.getElementById("messageInput");
+    const messages = document.getElementById("messages");
+    const newChatBtn = document.getElementById("newChatBtn");
+    const overlay = document.getElementById("overlay");
+    const sendBtn = document.getElementById("sendBtn");
+
+    endpointText.textContent = CHAT_URL;
+
+    function scrollToBottom() {
+      requestAnimationFrame(() => {
+        chatArea.scrollTop = chatArea.scrollHeight;
+      });
+    }
+
+    function autoResizeInput() {
+      messageInput.style.height = "auto";
+      messageInput.style.height = `${Math.min(messageInput.scrollHeight, 180)}px`;
+    }
+
+    function setSending(isSending) {
+      state.isSending = isSending;
+      sendBtn.disabled = isSending || !messageInput.value.trim();
+      messageInput.disabled = isSending;
+    }
+
+    function hideHero() {
+      if (hero) {
+        hero.style.display = "none";
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function renderTaskPanel(meta = {}) {
+      const steps = meta.steps || ["理解用户意图", "拆解票务任务", "等待后端返回执行状态"];
+      const progress = Number.isFinite(meta.progress) ? Math.max(0, Math.min(100, meta.progress)) : 36;
+      const status = meta.status || "预留状态";
+
+      return `
+        <div class="task-panel">
+          <div class="task-row">
+            <b>任务拆解</b>
+            <span>${escapeHtml(steps.join(" / "))}</span>
+          </div>
+          <div class="task-row">
+            <b>任务进度</b>
+            <div class="progress" aria-label="任务进度 ${progress}%">
+              <div class="progress-bar" style="width: ${progress}%"></div>
+            </div>
+          </div>
+          <div class="task-row">
+            <b>当前状态</b>
+            <span>${escapeHtml(status)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function appendMessage(role, content, options = {}) {
+      hideHero();
+      const message = document.createElement("article");
+      message.className = `message ${role}`;
+      message.dataset.role = role;
+
+      const avatar = role === "user" ? "你" : "AI";
+      const safeContent = options.raw ? content : escapeHtml(content);
+      const taskPanel = role === "assistant" && options.showTaskPanel
+        ? renderTaskPanel(options.meta)
+        : "";
+
+      message.innerHTML = `
+        <div class="avatar">${avatar}</div>
+        <div>
+          <div class="bubble">${safeContent}${taskPanel}</div>
+          ${options.metaText ? `<div class="bubble-meta">${escapeHtml(options.metaText)}</div>` : ""}
+        </div>
+      `;
+
+      messages.appendChild(message);
+      scrollToBottom();
+      return message;
+    }
+
+    function appendTypingMessage() {
+      return appendMessage(
+        "assistant",
+        '<span class="typing"><span></span><span></span><span></span></span>',
+        { raw: true, metaText: "正在请求 Ticket Mind..." }
+      );
+    }
+
+    function normalizeReply(payload) {
+      if (payload == null) {
+        return "后端没有返回内容。";
+      }
+
+      if (typeof payload === "string") {
+        return payload;
+      }
+
+      const data = Object.prototype.hasOwnProperty.call(payload, "data") ? payload.data : payload;
+
+      if (typeof data === "string") {
+        return data;
+      }
+
+      if (data && typeof data === "object") {
+        return data.answer || data.reply || data.content || data.message || JSON.stringify(data, null, 2);
+      }
+
+      return payload.message || JSON.stringify(payload, null, 2);
+    }
+
+    function normalizeMeta(payload) {
+      const data = payload && typeof payload === "object" && Object.prototype.hasOwnProperty.call(payload, "data")
+        ? payload.data
+        : payload;
+
+      if (!data || typeof data !== "object") {
+        return null;
+      }
+
+      return {
+        steps: data.steps || data.taskSteps || data.plan,
+        progress: data.progress,
+        status: data.status || data.stage || data.taskStatus
+      };
+    }
+
+    function updateHistory(title) {
+      state.history.unshift(title);
+      historyList.innerHTML = "";
+      state.history.slice(0, 6).forEach((item, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `history-item${index === 0 ? " active" : ""}`;
+        button.textContent = item;
+        historyList.appendChild(button);
+      });
+    }
+
+    async function sendMessage(text) {
+      const prompt = text.trim();
+      if (!prompt || state.isSending) {
+        return;
+      }
+
+      appendMessage("user", prompt);
+      updateHistory(prompt.length > 24 ? `${prompt.slice(0, 24)}...` : prompt);
+      messageInput.value = "";
+      autoResizeInput();
+      setSending(true);
+
+      const typingMessage = appendTypingMessage();
+
+      try {
+        const response = await fetch(CHAT_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: prompt,
+            sessionId: state.sessionId
+          })
+        });
+
+        const contentType = response.headers.get("content-type") || "";
+        const payload = contentType.includes("application/json")
+          ? await response.json()
+          : await response.text();
+
+        if (!response.ok) {
+          throw new Error(typeof payload === "string" ? payload : payload.message || `请求失败：${response.status}`);
+        }
+
+        const reply = normalizeReply(payload);
+        const meta = normalizeMeta(payload);
+        typingMessage.remove();
+        appendMessage("assistant", reply, {
+          showTaskPanel: true,
+          meta,
+          metaText: "任务拆解与进度区为预留组件，可接入后端执行详情。"
+        });
+      } catch (error) {
+        typingMessage.remove();
+        appendMessage("assistant", `接口请求失败：${error.message || "未知错误"}\n请确认后端服务已启动，并且 ${CHAT_URL} 可访问。`, {
+          showTaskPanel: true,
+          meta: {
+            progress: 0,
+            status: "请求失败"
+          }
+        });
+      } finally {
+        setSending(false);
+        messageInput.focus();
+      }
+    }
+
+    chatForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      sendMessage(messageInput.value);
+    });
+
+    messageInput.addEventListener("input", () => {
+      autoResizeInput();
+      sendBtn.disabled = state.isSending || !messageInput.value.trim();
+    });
+
+    messageInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        chatForm.requestSubmit();
+      }
+    });
+
+    document.querySelectorAll("[data-prompt]").forEach((button) => {
+      button.addEventListener("click", () => {
+        messageInput.value = button.dataset.prompt;
+        autoResizeInput();
+        setSending(false);
+        messageInput.focus();
+      });
+    });
+
+    newChatBtn.addEventListener("click", () => {
+      state.sessionId = crypto.randomUUID ? crypto.randomUUID() : `session-${Date.now()}`;
+      messages.innerHTML = "";
+      if (hero) {
+        hero.style.display = "grid";
+      }
+      updateHistory("新的票务咨询");
+      messageInput.value = "";
+      autoResizeInput();
+      setSending(false);
+      document.body.classList.remove("sidebar-open");
+      messageInput.focus();
+    });
+
+    menuBtn.addEventListener("click", () => {
+      document.body.classList.add("sidebar-open");
+    });
+
+    overlay.addEventListener("click", () => {
+      document.body.classList.remove("sidebar-open");
+    });
+
+    setSending(false);
+    autoResizeInput();
+  </script>
+</body>
+</html>
