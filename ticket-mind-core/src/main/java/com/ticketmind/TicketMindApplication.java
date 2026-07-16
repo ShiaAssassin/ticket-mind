@@ -5,7 +5,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {
+        "com.ticketmind",
+        "com.ticketmind.common"
+})
 @EnableConfigurationProperties(AgentProperties.class)
 public class TicketMindApplication {
 
