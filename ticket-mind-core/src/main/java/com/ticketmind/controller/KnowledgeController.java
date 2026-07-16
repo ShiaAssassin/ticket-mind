@@ -5,7 +5,7 @@ import com.ticketmind.common.Result;
 import com.ticketmind.common.ResultCode;
 import com.ticketmind.model.dto.KnowledgeUploadResult;
 import com.ticketmind.model.entity.KnowledgeChunk;
-import com.ticketmind.service.KnowledgeService;
+import com.ticketmind.service.impl.KnowledgeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;

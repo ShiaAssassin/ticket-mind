@@ -99,6 +99,12 @@ mvn -pl ticket-mind-core spring-boot:run
 
 启用后，`/knowledge/upload` 上传知识库文档成功会发送一条 `knowledge.uploaded` 消息到默认交换机 `ticket-mind.knowledge.exchange`，并由内置消费者接收。
 
+### DAG 与 TodoList
+
+`ToolDagBuilder` 根据 tool 的 `outputKeys` 与其他 tool 的 `inputKeys` 交集自动构建有向边，并在发现循环依赖时拒绝构建。
+
+`TodoListService` 仅在 RabbitMQ 启用时注册。启用后，活跃 TodoList 保存到 Redis；调用 `complete(taskId)` 会发布 `todo-list.archived` 事件，由后台消费者异步写入 `tmp/todo-list-archive`。RabbitMQ 未启用时不注册 TodoList 持久化组件。归档存储通过 `TodoListArchiveStorage` 抽象。
+
 启动 MCP Server：
 
 ```bash

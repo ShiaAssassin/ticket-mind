@@ -1,4 +1,4 @@
-package com.ticketmind.service;
+package com.ticketmind.service.impl;
 
 import com.ticketmind.agent.core.IntentJudgeAgent;
 import com.ticketmind.model.dto.IntentRecognitionResult;

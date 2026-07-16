@@ -1,4 +1,4 @@
-package com.ticketmind.service;
+package com.ticketmind.service.knowledge;
 
 import com.ticketmind.model.dto.KnowledgeDocumentUploadedEvent;
 import lombok.extern.slf4j.Slf4j;

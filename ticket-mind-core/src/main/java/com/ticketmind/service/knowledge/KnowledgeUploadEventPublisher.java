@@ -1,4 +1,4 @@
-package com.ticketmind.service;
+package com.ticketmind.service.knowledge;
 
 import com.ticketmind.common.BusinessException;
 import com.ticketmind.common.ResultCode;

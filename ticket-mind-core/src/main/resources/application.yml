@@ -44,3 +44,9 @@ ticket-mind:
     knowledge-upload-exchange: ${RABBITMQ_KNOWLEDGE_UPLOAD_EXCHANGE:ticket-mind.knowledge.exchange}
     knowledge-upload-queue: ${RABBITMQ_KNOWLEDGE_UPLOAD_QUEUE:ticket-mind.knowledge.uploaded.queue}
     knowledge-upload-routing-key: ${RABBITMQ_KNOWLEDGE_UPLOAD_ROUTING_KEY:knowledge.uploaded}
+    todo-list-archive-exchange: ${RABBITMQ_TODO_LIST_ARCHIVE_EXCHANGE:ticket-mind.todo-list.exchange}
+    todo-list-archive-queue: ${RABBITMQ_TODO_LIST_ARCHIVE_QUEUE:ticket-mind.todo-list.archived.queue}
+    todo-list-archive-routing-key: ${RABBITMQ_TODO_LIST_ARCHIVE_ROUTING_KEY:todo-list.archived}
+  todo-list:
+    active-ttl-hours: ${TODO_LIST_ACTIVE_TTL_HOURS:24}
+    temp-archive-directory: ${TODO_LIST_TEMP_ARCHIVE_DIRECTORY:tmp/todo-list-archive}

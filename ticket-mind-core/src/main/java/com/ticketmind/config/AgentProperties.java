@@ -15,6 +15,8 @@ public class AgentProperties {
 
     private final Rabbitmq rabbitmq = new Rabbitmq();
 
+    private final TodoList todoList = new TodoList();
+
     @Data
     public static class Chat {
         private int historyLimit = 10;
@@ -44,6 +46,15 @@ public class AgentProperties {
         private String knowledgeUploadExchange = "ticket-mind.knowledge.exchange";
         private String knowledgeUploadQueue = "ticket-mind.knowledge.uploaded.queue";
         private String knowledgeUploadRoutingKey = "knowledge.uploaded";
+        private String todoListArchiveExchange = "ticket-mind.todo-list.exchange";
+        private String todoListArchiveQueue = "ticket-mind.todo-list.archived.queue";
+        private String todoListArchiveRoutingKey = "todo-list.archived";
+    }
+
+    @Data
+    public static class TodoList {
+        private long activeTtlHours = 24;
+        private String tempArchiveDirectory = "tmp/todo-list-archive";
     }
 
 }

@@ -1,7 +1,7 @@
 package com.ticketmind.config;
 
 import com.ticketmind.repository.KnowledgeChunkRepository;
-import com.ticketmind.service.KnowledgeService;
+import com.ticketmind.service.impl.KnowledgeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;

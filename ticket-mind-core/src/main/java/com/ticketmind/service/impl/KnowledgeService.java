@@ -1,4 +1,4 @@
-package com.ticketmind.service;
+package com.ticketmind.service.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,6 +10,7 @@ import com.ticketmind.model.dto.KnowledgeDocumentUploadedEvent;
 import com.ticketmind.model.entity.KnowledgeChunk;
 import com.ticketmind.repository.KnowledgeChunkRepository;
 import com.ticketmind.service.knowledge.KnowledgeChunkProcessor;
+import com.ticketmind.service.knowledge.KnowledgeUploadEventPublisher;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
@@ -32,17 +33,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -110,7 +104,6 @@ public class KnowledgeService {
     @Transactional
     public List<KnowledgeChunk> uploadDocument(String filename, String content) {
         String source = sanitizeSource(filename);
-        String eventFilename = filename;
         if (!StringUtils.hasText(content)) {
             throw new BusinessException(ResultCode.MISSING_REQUIRED_PARAMETER, "知识库文档内容不能为空");
         }
@@ -155,7 +148,7 @@ public class KnowledgeService {
                     payloads.stream().map(ChunkPayload::chunk).toList()
             );
             upsertKnowledgeEmbeddings(savedChunks, payloads);
-            publishKnowledgeUploadEvent(eventFilename, source, savedChunks.size());
+            publishKnowledgeUploadEvent(filename, source, savedChunks.size());
             return savedChunks;
         } catch (BusinessException ex) {
             if (agentProperties.getChroma().isEnabled()) {
@@ -273,7 +266,7 @@ public class KnowledgeService {
     }
 
     private void ensureKnowledgeCollection() {
-        boolean collectionExists = chromaClient.listCollections().stream()
+        boolean collectionExists = Objects.requireNonNull(chromaClient.listCollections()).stream()
                 .anyMatch(collection -> agentProperties.getChroma().getKnowledgeCollection().equals(collection.name()));
         if (!collectionExists) {
             chromaClient.createCollection(new CreateCollectionRequest(agentProperties.getChroma().getKnowledgeCollection()));
@@ -281,7 +274,7 @@ public class KnowledgeService {
     }
 
     public void resetKnowledgeCollection() {
-        boolean collectionExists = chromaClient.listCollections().stream()
+        boolean collectionExists = Objects.requireNonNull(chromaClient.listCollections()).stream()
                 .anyMatch(collection -> agentProperties.getChroma().getKnowledgeCollection().equals(collection.name()));
         if (collectionExists) {
             chromaClient.deleteCollection(agentProperties.getChroma().getKnowledgeCollection());
@@ -364,9 +357,7 @@ public class KnowledgeService {
         }
         try {
             return objectMapper.writeValueAsString(embedding);
-        } catch (RuntimeException ex) {
-            throw new BusinessException(ResultCode.UNKNOWN_SERVER_ERROR, "序列化知识向量失败");
-        } catch (java.io.IOException ex) {
+        } catch (RuntimeException | IOException ex) {
             throw new BusinessException(ResultCode.UNKNOWN_SERVER_ERROR, "序列化知识向量失败");
         }
     }
@@ -378,9 +369,7 @@ public class KnowledgeService {
         try {
             return objectMapper.readValue(embeddingJson, new TypeReference<>() {
             });
-        } catch (RuntimeException ex) {
-            throw new BusinessException(ResultCode.UNKNOWN_SERVER_ERROR, "解析知识向量失败");
-        } catch (java.io.IOException ex) {
+        } catch (RuntimeException | IOException ex) {
             throw new BusinessException(ResultCode.UNKNOWN_SERVER_ERROR, "解析知识向量失败");
         }
     }
