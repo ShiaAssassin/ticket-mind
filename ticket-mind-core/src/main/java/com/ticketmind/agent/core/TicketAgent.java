@@ -2,15 +2,13 @@ package com.ticketmind.agent.core;
 
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
-import dev.langchain4j.service.spring.AiService;
 
-@AiService(tools = "ticketTools")
 public interface TicketAgent {
 
     @SystemMessage("""
-            You are Ticket Mind, a concise assistant for ticket-related workflows.
-            Help users clarify ticket intent, summarize issues, and suggest next actions.
-            If the request is ambiguous, ask one targeted follow-up question.
+            你是 TicketMind，一个简洁直接的票务助手。
+            请帮助用户澄清票务诉求、总结问题，并给出下一步建议。
+            如果用户需求存在歧义，请只提出一个有针对性的追问。
             """)
     String chat(@UserMessage String userMessage);
 }
