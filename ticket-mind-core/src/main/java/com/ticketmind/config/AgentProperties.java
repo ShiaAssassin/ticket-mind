@@ -3,6 +3,8 @@ package com.ticketmind.config;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.time.Duration;
+
 @Data
 @ConfigurationProperties(prefix = "ticket-mind")
 public class AgentProperties {
@@ -18,6 +20,8 @@ public class AgentProperties {
     private final TodoList todoList = new TodoList();
 
     private final ContextCompact contextCompact = new ContextCompact();
+
+    private final Mcp mcp = new Mcp();
 
     @Data
     public static class Chat {
@@ -70,6 +74,24 @@ public class AgentProperties {
         private String localStoreDirectory = "context-compact/tool-results";
         private String earlierToolResultPlaceholder = "[Earlier tool result compacted. Re-run if needed.]";
         private String storedToolResultPlaceholder = "[Tool result stored locally: %s. Re-run or inspect the file if needed.]";
+    }
+
+    @Data
+    public static class Mcp {
+        private boolean enabled = false;
+        private String sseUrl = "";
+        private String clientName = "ticket-mind-core";
+        private String clientVersion = "0.0.1-SNAPSHOT";
+        private String protocolVersion = "2024-11-05";
+        private Duration timeout = Duration.ofSeconds(60);
+        private Duration initializationTimeout = Duration.ofSeconds(30);
+        private Duration toolExecutionTimeout = Duration.ofSeconds(60);
+        private Duration resourcesTimeout = Duration.ofSeconds(60);
+        private Duration promptsTimeout = Duration.ofSeconds(60);
+        private Duration pingTimeout = Duration.ofSeconds(10);
+        private Duration reconnectInterval = Duration.ofSeconds(5);
+        private boolean logRequests = false;
+        private boolean logResponses = false;
     }
 
 }

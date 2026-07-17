@@ -57,6 +57,21 @@ ticket-mind:
     todo-list-archive-exchange: ${RABBITMQ_TODO_LIST_ARCHIVE_EXCHANGE:ticket-mind.todo-list.exchange}
     todo-list-archive-queue: ${RABBITMQ_TODO_LIST_ARCHIVE_QUEUE:ticket-mind.todo-list.archived.queue}
     todo-list-archive-routing-key: ${RABBITMQ_TODO_LIST_ARCHIVE_ROUTING_KEY:todo-list.archived}
+  mcp:
+    enabled: ${MCP_ENABLED:false}
+    sse-url: ${MCP_SSE_URL:}
+    client-name: ${MCP_CLIENT_NAME:ticket-mind-core}
+    client-version: ${MCP_CLIENT_VERSION:0.0.1-SNAPSHOT}
+    protocol-version: ${MCP_PROTOCOL_VERSION:2024-11-05}
+    timeout: ${MCP_TIMEOUT:60s}
+    initialization-timeout: ${MCP_INITIALIZATION_TIMEOUT:30s}
+    tool-execution-timeout: ${MCP_TOOL_EXECUTION_TIMEOUT:60s}
+    resources-timeout: ${MCP_RESOURCES_TIMEOUT:60s}
+    prompts-timeout: ${MCP_PROMPTS_TIMEOUT:60s}
+    ping-timeout: ${MCP_PING_TIMEOUT:10s}
+    reconnect-interval: ${MCP_RECONNECT_INTERVAL:5s}
+    log-requests: ${MCP_LOG_REQUESTS:false}
+    log-responses: ${MCP_LOG_RESPONSES:false}
   todo-list:
     active-ttl-hours: ${TODO_LIST_ACTIVE_TTL_HOURS:24}
     temp-archive-directory: ${TODO_LIST_TEMP_ARCHIVE_DIRECTORY:todo-list-archive}
