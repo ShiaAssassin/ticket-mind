@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ticketmind.common.BusinessException;
 import com.ticketmind.common.ResultCode;
 import com.ticketmind.config.AgentProperties;
+import com.ticketmind.model.dto.MemoryMessage;
 import com.ticketmind.model.entity.MessageRole;
 import lombok.AllArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -94,9 +95,6 @@ public class ShortTermMemory {
 
     private String key(String sessionId) {
         return KEY_PREFIX + sessionId;
-    }
-
-    public record MemoryMessage(MessageRole role, String content) {
     }
 
     private static class RedisException extends BusinessException {

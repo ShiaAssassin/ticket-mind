@@ -3,7 +3,7 @@ package com.ticketmind.agent.core;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 
-public interface ConversationSummaryAgent {
+public interface SummaryAgent {
 
     @SystemMessage("""
             你是 TicketMind 的对话总结 Agent。

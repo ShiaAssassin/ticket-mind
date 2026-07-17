@@ -1,6 +1,6 @@
 package com.ticketmind.config;
 
-import com.ticketmind.agent.core.ConversationSummaryAgent;
+import com.ticketmind.agent.core.SummaryAgent;
 import com.ticketmind.agent.core.IntentJudgeAgent;
 import com.ticketmind.agent.core.MonitorAgent;
 import com.ticketmind.agent.core.NotificationAgent;
@@ -33,9 +33,9 @@ public class AgentConfig {
     }
 
     @Bean
-    public ConversationSummaryAgent conversationSummaryAgent(
+    public SummaryAgent conversationSummaryAgent(
             ChatModel chatModel) {
-        return AiServices.builder(ConversationSummaryAgent.class)
+        return AiServices.builder(SummaryAgent.class)
                 .chatModel(chatModel)
                 .build();
     }

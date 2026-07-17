@@ -28,6 +28,16 @@ ticket-mind:
   chat:
     history-limit: ${CHAT_HISTORY_LIMIT:10}
     short-memory-ttl-hours: ${CHAT_SHORT_MEMORY_TTL_HOURS:24}
+  context-compact:
+    message-threshold: ${CONTEXT_COMPACT_MESSAGE_THRESHOLD:50}
+    head-message-count: ${CONTEXT_COMPACT_HEAD_MESSAGE_COUNT:3}
+    recent-tool-result-count: ${CONTEXT_COMPACT_RECENT_TOOL_RESULT_COUNT:3}
+    tool-result-max-chars: ${CONTEXT_COMPACT_TOOL_RESULT_MAX_CHARS:8000}
+    token-threshold: ${CONTEXT_COMPACT_TOKEN_THRESHOLD:6000}
+    emergency-target-ratio: ${CONTEXT_COMPACT_EMERGENCY_TARGET_RATIO:0.8}
+    local-store-directory: ${CONTEXT_COMPACT_LOCAL_STORE_DIRECTORY:context-compact/tool-results}
+    earlier-tool-result-placeholder: "${CONTEXT_COMPACT_EARLIER_TOOL_RESULT_PLACEHOLDER:[Earlier tool result compacted. Re-run if needed.]}"
+    stored-tool-result-placeholder: "${CONTEXT_COMPACT_STORED_TOOL_RESULT_PLACEHOLDER:[Tool result stored locally: %s. Re-run or inspect the file if needed.]}"
   knowledge:
     top-k: ${RAG_TOP_K:4}
     chunk-size: ${KNOWLEDGE_CHUNK_SIZE:512}
@@ -49,4 +59,4 @@ ticket-mind:
     todo-list-archive-routing-key: ${RABBITMQ_TODO_LIST_ARCHIVE_ROUTING_KEY:todo-list.archived}
   todo-list:
     active-ttl-hours: ${TODO_LIST_ACTIVE_TTL_HOURS:24}
-    temp-archive-directory: ${TODO_LIST_TEMP_ARCHIVE_DIRECTORY:tmp/todo-list-archive}
+    temp-archive-directory: ${TODO_LIST_TEMP_ARCHIVE_DIRECTORY:todo-list-archive}

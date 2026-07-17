@@ -17,6 +17,8 @@ public class AgentProperties {
 
     private final TodoList todoList = new TodoList();
 
+    private final ContextCompact contextCompact = new ContextCompact();
+
     @Data
     public static class Chat {
         private int historyLimit = 10;
@@ -54,7 +56,20 @@ public class AgentProperties {
     @Data
     public static class TodoList {
         private long activeTtlHours = 24;
-        private String tempArchiveDirectory = "tmp/todo-list-archive";
+        private String tempArchiveDirectory = "todo-list-archive";
+    }
+
+    @Data
+    public static class ContextCompact {
+        private int messageThreshold = 50;
+        private int headMessageCount = 3;
+        private int recentToolResultCount = 3;
+        private int toolResultMaxChars = 8000;
+        private int tokenThreshold = 6000;
+        private double emergencyTargetRatio = 0.8;
+        private String localStoreDirectory = "context-compact/tool-results";
+        private String earlierToolResultPlaceholder = "[Earlier tool result compacted. Re-run if needed.]";
+        private String storedToolResultPlaceholder = "[Tool result stored locally: %s. Re-run or inspect the file if needed.]";
     }
 
 }

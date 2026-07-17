@@ -16,7 +16,7 @@ import java.time.format.DateTimeFormatter;
 @Component
 @RequiredArgsConstructor
 @ConditionalOnProperty(prefix = "ticket-mind.rabbitmq", name = "enabled", havingValue = "true")
-public class TempFileTodoListArchiveStorage implements TodoListArchiveStorage {
+public class LocalFileTodoListArchiveStorage implements TodoListArchiveStorage {
 
     private final ObjectMapper objectMapper;
 
