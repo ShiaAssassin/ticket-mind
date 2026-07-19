@@ -42,7 +42,7 @@ public class AgentProperties {
         private String baseUrl = "http://localhost:8000";
         private String knowledgeCollection = "ticket-mind-knowledge";
         private String skillCollection = "ticket-mind-skill";
-        private String skillRootPath = "ticket-mind-core/src/main/resources/skills";
+        private String skillRootPath = "core-module/src/main/resources/skills";
         private boolean skillWatchEnabled = true;
     }
 

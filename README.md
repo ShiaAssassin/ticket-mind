@@ -74,7 +74,7 @@ TicketMind 是一个智能购票助手，用户只需用日常语言告诉它出
 
 ### 模块说明
 
-- `ticket-mind-core`：原有主业务应用，负责 Agent、业务逻辑、数据访问和 HTTP 接口。
+- `core-module`：核心业务模块，负责 Agent、业务逻辑、数据访问和 HTTP 接口。
 - `mcp-server`：独立部署的 MCP 服务模块，专门承载对外暴露的工具服务。
 
 ### 运行
@@ -83,7 +83,7 @@ TicketMind 是一个智能购票助手，用户只需用日常语言告诉它出
 
 ```bash
 export OPENAI_API_KEY=你的密钥
-mvn -pl ticket-mind-core spring-boot:run
+mvn -pl core-module spring-boot:run
 ```
 
 启用 RabbitMQ：
@@ -94,10 +94,24 @@ export RABBITMQ_HOST=localhost
 export RABBITMQ_PORT=5672
 export RABBITMQ_USERNAME=guest
 export RABBITMQ_PASSWORD=guest
-mvn -pl ticket-mind-core spring-boot:run
+mvn -pl core-module spring-boot:run
 ```
 
 启用后，`/knowledge/upload` 上传知识库文档成功会发送一条 `knowledge.uploaded` 消息到默认交换机 `ticket-mind.knowledge.exchange`，并由内置消费者接收。
+
+### 安全配置
+
+主应用默认启用 JWT 拦截。放行路径和放行 IP 在 `security.permit` 下配置，JWT 密钥在 `security.jwt.secret` 下配置。
+
+```bash
+export JWT_SECRET=至少32字节的签名密钥
+```
+
+默认放行 `/`、`/favicon.*`、`/actuator/health`。受保护接口需要携带请求头：
+
+```http
+Authorization: Bearer <access-token>
+```
 
 ### DAG 与 TodoList
 
@@ -108,4 +122,8 @@ mvn -pl ticket-mind-core spring-boot:run
 启动 MCP Server：
 
 ```bash
+mvn -pl common install -DskipTests
 mvn -pl mcp-server spring-boot:run
+```
+
+MCP Server 默认端口为 `18080`，可通过 `MCP_SERVER_PORT` 覆盖；主应用默认端口为 `8080`，可通过 `SERVER_PORT` 覆盖。

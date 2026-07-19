@@ -10,14 +10,19 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>ticket-mind-core</artifactId>
-    <name>ticket-mind-core</name>
-    <description>Main TicketMind Spring Boot application.</description>
+    <artifactId>core-module</artifactId>
+    <name>core-module</name>
+    <description>Core business module for TicketMind.</description>
 
     <dependencies>
         <dependency>
             <groupId>com.ticketmind</groupId>
             <artifactId>common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ticketmind</groupId>
+            <artifactId>security</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

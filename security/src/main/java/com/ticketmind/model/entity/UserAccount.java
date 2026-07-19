@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "user_accounts")
@@ -30,11 +28,6 @@ public class UserAccount {
 
     @Column(nullable = false, length = 120)
     private String displayName;
-
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_account_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "role", nullable = false)
-    private Set<String> roles = new HashSet<>();
 
     @Column(nullable = false)
     private boolean enabled = true;

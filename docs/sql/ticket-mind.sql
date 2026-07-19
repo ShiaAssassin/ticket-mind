@@ -27,10 +27,3 @@ CREATE TABLE `user_accounts` (
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     PRIMARY KEY (`id`)
 );
-
-CREATE TABLE `user_account_roles` (
-    `user_id` BIGINT NOT NULL,
-    `role` VARCHAR(255) NOT NULL,
-    PRIMARY KEY (`user_id`, `role`),
-    CONSTRAINT `fk_user_roles_user` FOREIGN KEY (`user_id`) REFERENCES `user_accounts` (`id`) ON DELETE CASCADE
-);

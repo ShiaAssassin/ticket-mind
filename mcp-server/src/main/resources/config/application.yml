@@ -3,7 +3,7 @@ spring:
     name: mcp-server
 
 server:
-  port: ${SERVER_PORT:18080}
+  port: ${MCP_SERVER_PORT:18080}
 
 
 ticket-mind:

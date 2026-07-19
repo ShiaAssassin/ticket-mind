@@ -20,7 +20,8 @@
 
     <modules>
         <module>common</module>
-        <module>ticket-mind-core</module>
+        <module>security</module>
+        <module>core-module</module>
         <module>mcp-server</module>
     </modules>
 

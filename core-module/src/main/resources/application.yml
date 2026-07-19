@@ -11,6 +11,26 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
 
+security:
+  jwt:
+    secret: ${JWT_SECRET:}
+    issuer: ${JWT_ISSUER:ticket-mind}
+    access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:2h}
+    refresh-token-ttl: ${JWT_REFRESH_TOKEN_TTL:14d}
+  permit:
+    matchers:
+      - pattern: /
+        method: GET
+      - pattern: /auth/login
+        method: POST
+      - pattern: /auth/refresh
+        method: POST
+      - pattern: /favicon.*
+        method: GET
+      - pattern: /actuator/health
+        method: GET
+    ips: ${SECURITY_PERMIT_IPS:}
+
 langchain4j:
   open-ai:
     chat-model:
@@ -47,7 +67,7 @@ ticket-mind:
     base-url: ${CHROMA_BASE_URL:http://localhost:8000}
     knowledge-collection: ${CHROMA_COLLECTION:ticket-mind-knowledge}
     skill-collection: ${CHROMA_SKILL_COLLECTION:ticket-mind-skill}
-    skill-root-path: ${CHROMA_SKILL_ROOT_PATH:ticket-mind-core/src/main/resources/skills}
+    skill-root-path: ${CHROMA_SKILL_ROOT_PATH:core-module/src/main/resources/skills}
     skill-watch-enabled: ${CHROMA_SKILL_WATCH_ENABLED:true}
   rabbitmq:
     enabled: ${RABBITMQ_ENABLED:false}

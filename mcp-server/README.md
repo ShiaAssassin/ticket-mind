@@ -14,10 +14,10 @@
 mvn -pl mcp-server spring-boot:run
 ```
 
-默认端口为 `18080`。
+默认端口为 `18080`，可通过 `MCP_SERVER_PORT` 覆盖，避免和主应用的 `SERVER_PORT` 混用。
 
 ## 后续扩展建议
 
 - 在该模块内补充正式的 MCP transport 配置，例如 `stdio` 或 `SSE`
 - 将票务查询、订单查询等工具逐步迁入该模块
-- 如果主应用需要消费 MCP 工具，可在 `ticket-mind-core` 增加 MCP client 配置
+- 如果主应用需要消费 MCP 工具，可在 `core-module` 增加 MCP client 配置
