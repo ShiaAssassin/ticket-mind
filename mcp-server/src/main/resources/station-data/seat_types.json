@@ -1,12 +1,62 @@
-
-{
-    "硬座": "1",
-    "软座": "2",
-    "硬卧": "3",
-    "软卧": "4",
-    "高级软卧": "6",
-    "动卧": "F",
-    "二等座": "O",
-    "一等座": "M",
-    "商务座/特等座": "9"
-}
+[
+  {
+    "index": 32,
+    "name": "商务座",
+    "shortName": "swz",
+    "code": "9"
+  },
+  {
+    "index": 31,
+    "name": "一等座",
+    "shortName": "zy",
+    "code": "M"
+  },
+  {
+    "index": 30,
+    "name": "二等座",
+    "shortName": "ze",
+    "code": "O"
+  },
+  {
+    "index": 21,
+    "name": "高级软卧",
+    "shortName": "gr",
+    "code": "6"
+  },
+  {
+    "index": 23,
+    "name": "软卧",
+    "shortName": "rw",
+    "code": "4"
+  },
+  {
+    "index": 33,
+    "name": "动卧",
+    "shortName": "srrb",
+    "code": "F"
+  },
+  {
+    "index": 28,
+    "name": "硬卧",
+    "shortName": "yw",
+    "code": "3"
+  },
+  {
+    "index": 24,
+    "name": "软座",
+    "shortName": "rz",
+    "code": "2"
+  },
+  {
+    "index": 29,
+    "name": "硬座",
+    "shortName": "yz",
+    "code": "1"
+  },
+  {
+    "index": 26,
+    "name": "无座",
+    "shortName": "wz",
+    "code": "W"
+  }
+]
