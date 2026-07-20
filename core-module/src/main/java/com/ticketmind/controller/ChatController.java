@@ -9,6 +9,7 @@ import com.ticketmind.service.impl.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,5 +45,11 @@ public class ChatController {
     @GetMapping("/sessions")
     public ResponseEntity<Result<ChatSessionListResponse>> sessions() {
         return ResponseEntity.ok(Result.success(chatService.sessions()));
+    }
+
+    @DeleteMapping("/sessions/{sessionId}")
+    public ResponseEntity<Result<Void>> deleteSession(@PathVariable Long sessionId) {
+        chatService.deleteSession(sessionId);
+        return ResponseEntity.ok(Result.success());
     }
 }

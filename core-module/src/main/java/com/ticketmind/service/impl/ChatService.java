@@ -118,6 +118,15 @@ public class ChatService {
         return new ChatSessionListResponse(sessions);
     }
 
+    @Transactional
+    public void deleteSession(Long sessionId) {
+        Long userId = requireUserId();
+        ChatSession session = chatSessionRepository.findByIdAndUser_Id(sessionId, userId)
+                .orElseThrow(() -> new BusinessException(ResultCode.DATA_NOT_FOUND, "chat session not found"));
+        chatMessageRecordRepository.deleteBySession_Id(session.getId());
+        chatSessionRepository.delete(session);
+    }
+
     private ChatSession createSessionAndSaveUserMessage(Long sessionId, String prompt) {
         ChatSession session = getOrCreateSession(sessionId, prompt);
         saveMessage(session, ChatMessageRole.USER, prompt);
