@@ -1,7 +1,7 @@
 package com.ticketmind.model.dto;
 
 public record ChatSessionListItem(
-        String sessionId,
+        Long sessionId,
         String title
 ) {
 }

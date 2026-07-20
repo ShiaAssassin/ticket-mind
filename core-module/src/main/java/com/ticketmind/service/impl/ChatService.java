@@ -28,7 +28,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -48,24 +47,24 @@ public class ChatService {
     private final TransactionTemplate transactionTemplate;
 
     @Transactional
-    public ChatResponse chat(String sessionId, String message) {
+    public ChatResponse chat(Long sessionId, String message) {
         String prompt = requireMessage(message);
         ChatSession session = getOrCreateSession(sessionId, prompt);
         saveMessage(session, ChatMessageRole.USER, prompt);
 
-        String answer = ticketAgent.chat(session.getPublicId(), prompt);
+        String answer = ticketAgent.chat(sessionMemoryId(session), prompt);
         saveMessage(session, ChatMessageRole.ASSISTANT, answer);
         touchSession(session);
-        return new ChatResponse(session.getPublicId(), answer);
+        return new ChatResponse(session.getId(), answer);
     }
 
-    public SseEmitter stream(String sessionId, String message) {
+    public SseEmitter stream(Long sessionId, String message) {
         String prompt = requireMessage(message);
         ChatSession session = transactionTemplate.execute(status -> createSessionAndSaveUserMessage(sessionId, prompt));
 
         SseEmitter emitter = new SseEmitter(STREAM_TIMEOUT_MILLIS);
         StringBuilder answer = new StringBuilder();
-        TokenStream tokenStream = ticketAgent.stream(session.getPublicId(), prompt);
+        TokenStream tokenStream = ticketAgent.stream(sessionMemoryId(session), prompt);
 
         tokenStream
                 .onPartialResponse(token -> {
@@ -74,11 +73,11 @@ public class ChatService {
                 })
                 .onCompleteResponse(response -> {
                     transactionTemplate.executeWithoutResult(status -> saveAssistantReply(session.getId(), answer.toString()));
-                    send(emitter, "done", new ChatResponse(session.getPublicId(), answer.toString()));
+                    send(emitter, "done", new ChatResponse(session.getId(), answer.toString()));
                     emitter.complete();
                 })
                 .onError(error -> {
-                    log.warn("Streaming chat failed, sessionId={}", session.getPublicId(), error);
+                    log.warn("Streaming chat failed, sessionId={}", session.getId(), error);
                     emitter.completeWithError(error);
                 })
                 .start();
@@ -87,12 +86,12 @@ public class ChatService {
     }
 
     @Transactional(readOnly = true)
-    public ChatHistoryResponse history(String sessionId) {
+    public ChatHistoryResponse history(Long sessionId) {
         Long userId = requireUserId();
-        ChatSession session = chatSessionRepository.findByPublicIdAndUser_Id(sessionId, userId)
+        ChatSession session = chatSessionRepository.findByIdAndUser_Id(sessionId, userId)
                 .orElseThrow(() -> new BusinessException(ResultCode.DATA_NOT_FOUND, "chat session not found"));
         List<ChatMessageHistoryItem> messages = chatMessageRecordRepository
-                .findBySession_PublicIdAndSession_User_IdOrderByCreatedAtAscIdAsc(session.getPublicId(), userId)
+                .findBySession_IdAndSession_User_IdOrderByCreatedAtAscIdAsc(session.getId(), userId)
                 .stream()
                 .map(message -> new ChatMessageHistoryItem(
                         message.getId(),
@@ -101,7 +100,7 @@ public class ChatService {
                         message.getCreatedAt()
                 ))
                 .toList();
-        return new ChatHistoryResponse(session.getPublicId(), messages);
+        return new ChatHistoryResponse(session.getId(), messages);
     }
 
     @Transactional(readOnly = true)
@@ -109,12 +108,12 @@ public class ChatService {
         Long userId = requireUserId();
         List<ChatSessionListItem> sessions = chatSessionRepository.findByUser_IdOrderByUpdatedAtDescIdDesc(userId)
                 .stream()
-                .map(session -> new ChatSessionListItem(session.getPublicId(), session.getTitle()))
+                .map(session -> new ChatSessionListItem(session.getId(), session.getTitle()))
                 .toList();
         return new ChatSessionListResponse(sessions);
     }
 
-    private ChatSession createSessionAndSaveUserMessage(String sessionId, String prompt) {
+    private ChatSession createSessionAndSaveUserMessage(Long sessionId, String prompt) {
         ChatSession session = getOrCreateSession(sessionId, prompt);
         saveMessage(session, ChatMessageRole.USER, prompt);
         return session;
@@ -127,17 +126,16 @@ public class ChatService {
         touchSession(session);
     }
 
-    private ChatSession getOrCreateSession(String sessionId, String firstMessage) {
+    private ChatSession getOrCreateSession(Long sessionId, String firstMessage) {
         Long userId = requireUserId();
-        if (StringUtils.hasText(sessionId)) {
-            return chatSessionRepository.findByPublicIdAndUser_Id(sessionId, userId)
+        if (sessionId != null) {
+            return chatSessionRepository.findByIdAndUser_Id(sessionId, userId)
                     .orElseThrow(() -> new BusinessException(ResultCode.DATA_NOT_FOUND, "chat session not found"));
         }
 
         UserAccount user = userAccountRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ResultCode.DATA_NOT_FOUND, "user not found"));
         ChatSession session = new ChatSession();
-        session.setPublicId(UUID.randomUUID().toString());
         session.setUser(user);
         session.setTitle(buildTitle(firstMessage));
         return chatSessionRepository.save(session);
@@ -154,6 +152,10 @@ public class ChatService {
     private void touchSession(ChatSession session) {
         session.setUpdatedAt(Instant.now());
         chatSessionRepository.save(session);
+    }
+
+    private String sessionMemoryId(ChatSession session) {
+        return String.valueOf(session.getId());
     }
 
     private String requireMessage(String message) {

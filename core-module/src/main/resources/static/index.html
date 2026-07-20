@@ -684,7 +684,7 @@
 
     const state = {
       isSending: false,
-      sessionId: crypto.randomUUID ? crypto.randomUUID() : `session-${Date.now()}`,
+      sessionId: null,
       history: []
     };
 
@@ -879,6 +879,10 @@
 
         const reply = normalizeReply(payload);
         const meta = normalizeMeta(payload);
+        const session = payload && payload.data ? payload.data : payload;
+        if (session && typeof session === "object" && Object.prototype.hasOwnProperty.call(session, "sessionId")) {
+          state.sessionId = session.sessionId;
+        }
         typingMessage.remove();
         appendMessage("assistant", reply, {
           showTaskPanel: true,
@@ -927,7 +931,7 @@
     });
 
     newChatBtn.addEventListener("click", () => {
-      state.sessionId = crypto.randomUUID ? crypto.randomUUID() : `session-${Date.now()}`;
+      state.sessionId = null;
       messages.innerHTML = "";
       if (hero) {
         hero.style.display = "grid";

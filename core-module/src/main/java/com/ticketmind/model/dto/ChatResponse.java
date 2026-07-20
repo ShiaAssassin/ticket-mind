@@ -1,7 +1,7 @@
 package com.ticketmind.model.dto;
 
 public record ChatResponse(
-        String sessionId,
+        Long sessionId,
         String answer
 ) {
 }

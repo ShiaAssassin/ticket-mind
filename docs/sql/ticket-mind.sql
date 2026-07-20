@@ -1,6 +1,5 @@
 CREATE TABLE `chat_session` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
-    `public_id` VARCHAR(255) NOT NULL,
     `user_id` BIGINT NOT NULL,
     `title` VARCHAR(120) NOT NULL DEFAULT 'New Conversation',
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),

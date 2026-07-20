@@ -37,7 +37,7 @@ public class ChatController {
     }
 
     @GetMapping("/{sessionId}/messages")
-    public ResponseEntity<Result<ChatHistoryResponse>> history(@PathVariable String sessionId) {
+    public ResponseEntity<Result<ChatHistoryResponse>> history(@PathVariable Long sessionId) {
         return ResponseEntity.ok(Result.success(chatService.history(sessionId)));
     }
 
