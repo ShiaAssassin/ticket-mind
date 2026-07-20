@@ -21,6 +21,8 @@ public class AgentProperties {
 
     private final ContextCompact contextCompact = new ContextCompact();
 
+    private final SystemPromptMemory systemPromptMemory = new SystemPromptMemory();
+
     private final Mcp mcp = new Mcp();
 
     @Data
@@ -70,6 +72,12 @@ public class AgentProperties {
         private String localStoreDirectory = "context-compact/tool-results";
         private String earlierToolResultPlaceholder = "[Earlier tool result compacted. Re-run if needed.]";
         private String storedToolResultPlaceholder = "[Tool result stored locally: %s. Re-run or inspect the file if needed.]";
+    }
+
+    @Data
+    public static class SystemPromptMemory {
+        private boolean enabled = true;
+        private int maxItems = 10;
     }
 
     @Data

@@ -5,6 +5,7 @@ import com.ticketmind.agent.core.SummaryAgent;
 import com.ticketmind.agent.core.IntentJudgeAgent;
 import com.ticketmind.agent.core.MonitorAgent;
 import com.ticketmind.agent.core.NotificationAgent;
+import com.ticketmind.agent.core.SystemPromptMemoryAgent;
 import com.ticketmind.agent.core.TaskOrchestratorAgent;
 import com.ticketmind.agent.core.TicketAgent;
 import com.ticketmind.agent.tools.AccessTools;
@@ -111,6 +112,13 @@ public class AgentConfig {
         return AiServices.builder(NotificationAgent.class)
                 .chatModel(chatModel)
                 .tools(notifyTools)
+                .build();
+    }
+
+    @Bean
+    public SystemPromptMemoryAgent systemPromptMemoryAgent(ChatModel chatModel) {
+        return AiServices.builder(SystemPromptMemoryAgent.class)
+                .chatModel(chatModel)
                 .build();
     }
 }

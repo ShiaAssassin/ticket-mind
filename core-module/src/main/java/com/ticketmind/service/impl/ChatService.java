@@ -1,6 +1,8 @@
 package com.ticketmind.service.impl;
 
 import com.ticketmind.agent.core.TicketAgent;
+import com.ticketmind.agent.memory.SystemPromptMemoryService;
+import com.ticketmind.agent.workflow.TaskWorkflowService;
 import com.ticketmind.common.BusinessException;
 import com.ticketmind.common.ResultCode;
 import com.ticketmind.context.UserContextHolder;
@@ -38,6 +40,10 @@ public class ChatService {
 
     private final TicketAgent ticketAgent;
 
+    private final TaskWorkflowService taskWorkflowService;
+
+    private final SystemPromptMemoryService systemPromptMemoryService;
+
     private final ChatSessionRepository chatSessionRepository;
 
     private final ChatMessageRecordRepository chatMessageRecordRepository;
@@ -52,7 +58,10 @@ public class ChatService {
         ChatSession session = getOrCreateSession(sessionId, prompt);
         saveMessage(session, ChatMessageRole.USER, prompt);
 
-        String answer = ticketAgent.chat(sessionMemoryId(session), prompt);
+        String memoryId = sessionMemoryId(session);
+        String answer = taskWorkflowService.run(memoryId, prompt);
+        systemPromptMemoryService.markPromptInjected(memoryId);
+        systemPromptMemoryService.updateFromUserMessage(memoryId, prompt);
         saveMessage(session, ChatMessageRole.ASSISTANT, answer);
         touchSession(session);
         return new ChatResponse(session.getId(), answer);
@@ -64,7 +73,11 @@ public class ChatService {
 
         SseEmitter emitter = new SseEmitter(STREAM_TIMEOUT_MILLIS);
         StringBuilder answer = new StringBuilder();
-        TokenStream tokenStream = ticketAgent.stream(sessionMemoryId(session), prompt);
+        String memoryId = sessionMemoryId(session);
+        String systemPromptMemories = systemPromptMemoryService.renderForSystemPrompt(memoryId);
+        systemPromptMemoryService.markPromptInjected(memoryId);
+        systemPromptMemoryService.updateFromUserMessage(memoryId, prompt);
+        TokenStream tokenStream = ticketAgent.stream(memoryId, systemPromptMemories, prompt);
 
         tokenStream
                 .onPartialResponse(token -> {

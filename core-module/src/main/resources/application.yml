@@ -55,6 +55,9 @@ ticket-mind:
   chat:
     history-limit: ${CHAT_HISTORY_LIMIT:10}
     short-memory-ttl-hours: ${CHAT_SHORT_MEMORY_TTL_HOURS:24}
+  system-prompt-memory:
+    enabled: ${SYSTEM_PROMPT_MEMORY_ENABLED:true}
+    max-items: ${SYSTEM_PROMPT_MEMORY_MAX_ITEMS:10}
   context-compact:
     message-threshold: ${CONTEXT_COMPACT_MESSAGE_THRESHOLD:50}
     head-message-count: ${CONTEXT_COMPACT_HEAD_MESSAGE_COUNT:3}

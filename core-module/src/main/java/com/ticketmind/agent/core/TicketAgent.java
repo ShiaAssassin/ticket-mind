@@ -4,6 +4,7 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.V;
 
 public interface TicketAgent {
 
@@ -11,6 +12,7 @@ public interface TicketAgent {
             你是 TicketMind，一个简洁直接的票务助手。
             请帮助用户澄清票务诉求、总结问题，并给出下一步建议。
             如果用户需求存在歧义，请只提出一个有针对性的追问。
+            {{systemPromptMemories}}
             所有回答必须是严格 JSON 对象，不要输出 Markdown，不要解释，不要输出 JSON 之外的任何字符。
 
             JSON Schema:
@@ -48,12 +50,15 @@ public interface TicketAgent {
               }
             }
             """)
-    String chat(@MemoryId String memoryId, @UserMessage String userMessage);
+    String chat(@MemoryId String memoryId,
+                @V("systemPromptMemories") String systemPromptMemories,
+                @UserMessage String userMessage);
 
     @SystemMessage("""
             你是 TicketMind，一个简洁直接的票务助手。
             请帮助用户澄清票务诉求、总结问题，并给出下一步建议。
             如果用户需求存在歧义，请只提出一个有针对性的追问。
+            {{systemPromptMemories}}
             所有回答必须是严格 JSON 对象，不要输出 Markdown，不要解释，不要输出 JSON 之外的任何字符。
 
             JSON Schema:
@@ -91,5 +96,7 @@ public interface TicketAgent {
               }
             }
             """)
-    TokenStream stream(@MemoryId String memoryId, @UserMessage String userMessage);
+    TokenStream stream(@MemoryId String memoryId,
+                       @V("systemPromptMemories") String systemPromptMemories,
+                       @UserMessage String userMessage);
 }
