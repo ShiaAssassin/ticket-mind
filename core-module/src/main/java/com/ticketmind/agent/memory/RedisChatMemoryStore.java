@@ -1,9 +1,8 @@
-package com.ticketmind.service.memory;
+package com.ticketmind.agent.memory;
 
 import com.ticketmind.common.BusinessException;
 import com.ticketmind.common.ResultCode;
 import com.ticketmind.config.AgentProperties;
-import com.ticketmind.service.impl.ContextCompactService;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageDeserializer;
 import dev.langchain4j.data.message.ChatMessageSerializer;
@@ -17,13 +16,13 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CompactingRedisChatMemoryStore implements ChatMemoryStore {
+public class RedisChatMemoryStore implements ChatMemoryStore {
 
     private static final String KEY_PREFIX = "ticket-mind:chat:memory:";
 
     private final StringRedisTemplate redisTemplate;
 
-    private final ContextCompactService contextCompactService;
+    private final ContextCompactor contextCompactor;
 
     private final AgentProperties properties;
 
@@ -43,7 +42,7 @@ public class CompactingRedisChatMemoryStore implements ChatMemoryStore {
     @Override
     public void updateMessages(Object memoryId, List<ChatMessage> messages) {
         try {
-            List<ChatMessage> compacted = contextCompactService.compact(memoryId, messages);
+            List<ChatMessage> compacted = contextCompactor.compact(memoryId, messages);
             String value = ChatMessageSerializer.messagesToJson(compacted);
             redisTemplate.opsForValue().set(key(memoryId), value, ttl());
         } catch (Exception exception) {

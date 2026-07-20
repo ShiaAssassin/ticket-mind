@@ -5,7 +5,9 @@ import com.ticketmind.model.dto.LoginRequest;
 import com.ticketmind.model.dto.LoginResponse;
 import com.ticketmind.model.dto.RefreshTokenRequest;
 import com.ticketmind.model.dto.RefreshTokenResponse;
-import com.ticketmind.service.AuthService;
+import com.ticketmind.model.dto.RegisterRequest;
+import com.ticketmind.service.impl.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+
+    @PostMapping("/register")
+    public ResponseEntity<Result<LoginResponse>> register(@Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.ok(Result.success(authService.register(request)));
+    }
 
     @PostMapping("/login")
     public ResponseEntity<Result<LoginResponse>> login(@RequestBody LoginRequest request) {

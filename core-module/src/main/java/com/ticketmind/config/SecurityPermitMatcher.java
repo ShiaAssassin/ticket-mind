@@ -1,6 +1,5 @@
-package com.ticketmind.service;
+package com.ticketmind.config;
 
-import com.ticketmind.config.WebSecurityProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;

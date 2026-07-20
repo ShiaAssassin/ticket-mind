@@ -10,7 +10,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @RequiredArgsConstructor
 @EnableConfigurationProperties(WebSecurityProperties.class)
-public class SecurityConfiguration implements WebMvcConfigurer {
+public class SecurityConfig implements WebMvcConfigurer {
 
     private final JwtAuthenticationInterceptor jwtAuthenticationInterceptor;
 

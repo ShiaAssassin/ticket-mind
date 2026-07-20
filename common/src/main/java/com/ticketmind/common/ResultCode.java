@@ -21,6 +21,7 @@ public enum ResultCode {
     ACCESS_TOKEN_EXPIRED(40104, "AccessToken过期", HttpStatus.UNAUTHORIZED),
     REFRESH_TOKEN_EXPIRED(40105, "RefreshToken过期", HttpStatus.UNAUTHORIZED),
     INVALID_USERNAME_OR_PASSWORD(40106, "用户名/密码错误", HttpStatus.UNAUTHORIZED),
+    USERNAME_ALREADY_EXISTS(40901, "用户名已存在", HttpStatus.CONFLICT),
 
     INTERFACE_ACCESS_DENIED(40301, "没有接口访问权限", HttpStatus.FORBIDDEN),
     DATA_ACCESS_DENIED(40302, "没有数据访问权限", HttpStatus.FORBIDDEN),

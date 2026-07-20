@@ -1,16 +1,18 @@
 package com.ticketmind.config;
 
+import com.ticketmind.agent.core.BusinessExecutorAgent;
 import com.ticketmind.agent.core.SummaryAgent;
 import com.ticketmind.agent.core.IntentJudgeAgent;
 import com.ticketmind.agent.core.MonitorAgent;
 import com.ticketmind.agent.core.NotificationAgent;
+import com.ticketmind.agent.core.TaskOrchestratorAgent;
 import com.ticketmind.agent.core.TicketAgent;
-import com.ticketmind.agent.tool.registry.AccessTools;
-import com.ticketmind.agent.tool.registry.ExternalInfoTools;
-import com.ticketmind.agent.tool.registry.NotifyTools;
-import com.ticketmind.agent.tool.registry.OrderTools;
-import com.ticketmind.agent.tool.registry.PlanTools;
-import com.ticketmind.agent.tool.registry.TicketInfoTools;
+import com.ticketmind.agent.tools.AccessTools;
+import com.ticketmind.agent.tools.ExternalInfoTools;
+import com.ticketmind.agent.tools.NotifyTools;
+import com.ticketmind.agent.tools.OrderTools;
+import com.ticketmind.agent.tools.PlanTools;
+import com.ticketmind.agent.tools.TicketInfoTools;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -44,6 +46,26 @@ public class AgentConfig {
                 .build();
     }
 
+    @Bean
+    public BusinessExecutorAgent businessExecutorAgent(ChatModel chatModel,
+                                                       ChatMemoryStore chatMemoryStore,
+                                                       AgentProperties properties,
+                                                       AccessTools accessTools,
+                                                       ExternalInfoTools externalInfoTools,
+                                                       OrderTools orderTools,
+                                                       PlanTools planTools,
+                                                       TicketInfoTools ticketInfoTools) {
+        return AiServices.builder(BusinessExecutorAgent.class)
+                .chatModel(chatModel)
+                .chatMemoryProvider(memoryId -> MessageWindowChatMemory.builder()
+                        .id("biz-" + memoryId)
+                        .maxMessages(chatMemoryMaxMessages(properties))
+                        .chatMemoryStore(chatMemoryStore)
+                        .build())
+                .tools(accessTools, externalInfoTools, orderTools, planTools, ticketInfoTools)
+                .build();
+    }
+
     private int chatMemoryMaxMessages(AgentProperties properties) {
         int configuredLimit = properties.getChat().getHistoryLimit() * 2 + 8;
         int compactThreshold = properties.getContextCompact().getMessageThreshold() + 8;
@@ -61,6 +83,13 @@ public class AgentConfig {
     @Bean
     public IntentJudgeAgent intentJudgeAgent(ChatModel chatModel) {
         return AiServices.builder(IntentJudgeAgent.class)
+                .chatModel(chatModel)
+                .build();
+    }
+
+    @Bean
+    public TaskOrchestratorAgent taskOrchestratorAgent(ChatModel chatModel) {
+        return AiServices.builder(TaskOrchestratorAgent.class)
                 .chatModel(chatModel)
                 .build();
     }

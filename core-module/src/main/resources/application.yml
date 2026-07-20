@@ -23,6 +23,8 @@ security:
         method: GET
       - pattern: /auth/login
         method: POST
+      - pattern: /auth/register
+        method: POST
       - pattern: /auth/refresh
         method: POST
       - pattern: /favicon.*
@@ -97,6 +99,5 @@ ticket-mind:
     reconnect-interval: ${MCP_RECONNECT_INTERVAL:5s}
     log-requests: ${MCP_LOG_REQUESTS:false}
     log-responses: ${MCP_LOG_RESPONSES:false}
-  todo-list:
-    active-ttl-hours: ${TODO_LIST_ACTIVE_TTL_HOURS:24}
-    temp-archive-directory: ${TODO_LIST_TEMP_ARCHIVE_DIRECTORY:todo-list-archive}
+  task-plan:
+    active-ttl-hours: ${TASK_PLAN_ACTIVE_TTL_HOURS:24}

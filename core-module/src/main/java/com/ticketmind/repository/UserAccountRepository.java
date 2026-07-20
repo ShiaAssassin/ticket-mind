@@ -12,4 +12,7 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
 
     /** 登录认证时按用户名加载账号。 */
     Optional<UserAccount> findByUsername(String username);
+
+    /** 注册前检查用户名是否已存在。 */
+    boolean existsByUsername(String username);
 }

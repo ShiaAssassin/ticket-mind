@@ -15,8 +15,29 @@ public interface IntentJudgeAgent {
             TICKET_BOOKING：明确要求抢票、下单、提交订单、候补、锁座或执行购票动作。
             ORDER_MANAGEMENT：查询、取消、改签、退票、支付、处理订单状态等订单管理动作。
             ACCOUNT_MANAGEMENT：登录、注册、实名认证、乘车人管理、账号安全、绑定信息等账户管理动作。
-            只能返回一个枚举值：
-            NON_BUSINESS_CHAT、INFORMATION_INQUIRY、TRIP_PLANNING、TICKET_BOOKING、ORDER_MANAGEMENT、ACCOUNT_MANAGEMENT。
+            所有回答必须是严格 JSON 对象，不要输出 Markdown，不要解释，不要输出 JSON 之外的任何字符。
+
+            JSON Schema:
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["intent", "confidence", "reason"],
+              "properties": {
+                "intent": {
+                  "type": "string",
+                  "enum": ["NON_BUSINESS_CHAT", "INFORMATION_INQUIRY", "TRIP_PLANNING", "TICKET_BOOKING", "ORDER_MANAGEMENT", "ACCOUNT_MANAGEMENT"]
+                },
+                "confidence": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "reason": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
             """)
     IntentType judge(@UserMessage String userMessage);
 }

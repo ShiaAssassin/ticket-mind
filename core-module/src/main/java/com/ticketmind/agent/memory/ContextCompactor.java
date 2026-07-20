@@ -1,4 +1,4 @@
-package com.ticketmind.service.impl;
+package com.ticketmind.agent.memory;
 
 import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.Encoding;
@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ContextCompactService {
+public class ContextCompactor {
 
     private static final Encoding DEFAULT_ENCODING =
             Encodings.newLazyEncodingRegistry().getEncoding(EncodingType.CL100K_BASE);

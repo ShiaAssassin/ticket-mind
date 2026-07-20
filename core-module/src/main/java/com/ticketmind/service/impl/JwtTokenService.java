@@ -1,4 +1,4 @@
-package com.ticketmind.service;
+package com.ticketmind.service.impl;
 
 import com.ticketmind.config.WebSecurityProperties;
 import com.ticketmind.model.entity.JwtTokenClaims;

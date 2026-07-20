@@ -39,27 +39,6 @@ public class RabbitMqConfig {
     }
 
     @Bean
-    public TopicExchange todoListArchiveExchange(AgentProperties agentProperties) {
-        return new TopicExchange(agentProperties.getRabbitmq().getTodoListArchiveExchange(), true, false);
-    }
-
-    @Bean
-    public Queue todoListArchiveQueue(AgentProperties agentProperties) {
-        return new Queue(agentProperties.getRabbitmq().getTodoListArchiveQueue(), true);
-    }
-
-    @Bean
-    public Binding todoListArchiveBinding(
-            @Qualifier("todoListArchiveQueue") Queue todoListArchiveQueue,
-            @Qualifier("todoListArchiveExchange") TopicExchange todoListArchiveExchange,
-            AgentProperties agentProperties
-    ) {
-        return BindingBuilder.bind(todoListArchiveQueue)
-                .to(todoListArchiveExchange)
-                .with(agentProperties.getRabbitmq().getTodoListArchiveRoutingKey());
-    }
-
-    @Bean
     public MessageConverter rabbitMessageConverter() {
         return new Jackson2JsonMessageConverter();
     }
