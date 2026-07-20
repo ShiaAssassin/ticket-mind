@@ -1,5 +1,6 @@
 package com.ticketmind.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.ticketmind.model.entity.ChatSession;
@@ -17,4 +18,6 @@ public interface ChatSessionRepository extends JpaRepository<ChatSession, Long> 
     /** 管理员查看会话详情时需要连同用户信息一起加载。 */
     @EntityGraph(attributePaths = "user")
     Optional<ChatSession> findByPublicId(String publicId);
+
+    List<ChatSession> findByUser_IdOrderByUpdatedAtDescIdDesc(Long userId);
 }

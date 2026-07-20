@@ -4,6 +4,7 @@ import com.ticketmind.common.Result;
 import com.ticketmind.model.dto.ChatHistoryResponse;
 import com.ticketmind.model.dto.ChatRequest;
 import com.ticketmind.model.dto.ChatResponse;
+import com.ticketmind.model.dto.ChatSessionListResponse;
 import com.ticketmind.service.impl.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -35,5 +36,10 @@ public class ChatController {
     @GetMapping("/{sessionId}/messages")
     public Result<ChatHistoryResponse> history(@PathVariable String sessionId) {
         return Result.success(chatService.history(sessionId));
+    }
+
+    @GetMapping("/sessions")
+    public Result<ChatSessionListResponse> sessions() {
+        return Result.success(chatService.sessions());
     }
 }

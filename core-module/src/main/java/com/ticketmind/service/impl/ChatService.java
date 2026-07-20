@@ -7,6 +7,8 @@ import com.ticketmind.context.UserContextHolder;
 import com.ticketmind.model.dto.ChatHistoryResponse;
 import com.ticketmind.model.dto.ChatMessageHistoryItem;
 import com.ticketmind.model.dto.ChatResponse;
+import com.ticketmind.model.dto.ChatSessionListItem;
+import com.ticketmind.model.dto.ChatSessionListResponse;
 import com.ticketmind.model.entity.ChatMessageRecord;
 import com.ticketmind.model.entity.ChatMessageRole;
 import com.ticketmind.model.entity.ChatSession;
@@ -100,6 +102,16 @@ public class ChatService {
                 ))
                 .toList();
         return new ChatHistoryResponse(session.getPublicId(), messages);
+    }
+
+    @Transactional(readOnly = true)
+    public ChatSessionListResponse sessions() {
+        Long userId = requireUserId();
+        List<ChatSessionListItem> sessions = chatSessionRepository.findByUser_IdOrderByUpdatedAtDescIdDesc(userId)
+                .stream()
+                .map(session -> new ChatSessionListItem(session.getPublicId(), session.getTitle()))
+                .toList();
+        return new ChatSessionListResponse(sessions);
     }
 
     private ChatSession createSessionAndSaveUserMessage(String sessionId, String prompt) {
