@@ -16,6 +16,39 @@ mvn -pl mcp-server spring-boot:run
 
 默认端口为 `18080`，可通过 `MCP_SERVER_PORT` 覆盖，避免和主应用的 `SERVER_PORT` 混用。
 
+## 发送通知邮件接口
+
+新增 HTTP 接口：
+
+```http
+POST /internal/notifications/email
+Content-Type: application/json
+```
+
+请求体示例：
+
+```json
+{
+  "recipient": "user@example.com",
+  "subject": "出票通知",
+  "content": "您的订单已出票，请及时查看。"
+}
+```
+
+同时也支持通过 MCP `tools/call` 调用 `send_notification_email` 工具。
+
+邮件发送依赖以下环境变量：
+
+```bash
+TICKET_MIND_MAIL_HOST=smtp.example.com
+TICKET_MIND_MAIL_PORT=587
+TICKET_MIND_MAIL_USERNAME=your-username
+TICKET_MIND_MAIL_PASSWORD=your-password
+TICKET_MIND_MAIL_SMTP_AUTH=true
+TICKET_MIND_MAIL_SMTP_STARTTLS_ENABLE=true
+TICKET_MIND_NOTIFICATION_MAIL_FROM_ADDRESS=no-reply@example.com
+```
+
 ## 后续扩展建议
 
 - 在该模块内补充正式的 MCP transport 配置，例如 `stdio` 或 `SSE`

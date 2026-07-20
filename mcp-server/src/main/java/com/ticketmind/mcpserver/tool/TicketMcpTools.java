@@ -1,10 +1,15 @@
 package com.ticketmind.mcpserver.tool;
 
+import com.ticketmind.mcpserver.model.dto.SendNotificationEmailRequest;
+import com.ticketmind.mcpserver.model.dto.SendNotificationEmailResponse;
 import com.ticketmind.mcpserver.model.TicketsResponse;
+import com.ticketmind.mcpserver.service.NotificationEmailService;
 import com.ticketmind.mcpserver.service.RailwayCrawlerService;
 import com.ticketmind.mcpserver.service.StationCodeService;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import java.util.regex.Pattern;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -14,12 +19,19 @@ import java.util.Map;
 @Component
 public class TicketMcpTools {
 
+    private static final Pattern SIMPLE_EMAIL_PATTERN =
+            Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+
     private final RailwayCrawlerService railwayCrawlerService;
     private final StationCodeService stationCodeService;
+    private final NotificationEmailService notificationEmailService;
 
-    public TicketMcpTools(RailwayCrawlerService railwayCrawlerService, StationCodeService stationCodeService) {
+    public TicketMcpTools(RailwayCrawlerService railwayCrawlerService,
+                          StationCodeService stationCodeService,
+                          NotificationEmailService notificationEmailService) {
         this.railwayCrawlerService = railwayCrawlerService;
         this.stationCodeService = stationCodeService;
+        this.notificationEmailService = notificationEmailService;
     }
 
     public Map<String, Object> today() {
@@ -83,5 +95,20 @@ public class TicketMcpTools {
             result.put("httpStatus", response.httpStatus());
         }
         return result;
+    }
+
+    public SendNotificationEmailResponse sendNotificationEmail(String recipient, String subject, String content) {
+        if (!StringUtils.hasText(recipient) || !StringUtils.hasText(subject) || !StringUtils.hasText(content)) {
+            throw new IllegalArgumentException("recipient, subject and content are required");
+        }
+        if (!SIMPLE_EMAIL_PATTERN.matcher(recipient.trim()).matches()) {
+            throw new IllegalArgumentException("recipient must be a valid email address");
+        }
+
+        SendNotificationEmailRequest request = new SendNotificationEmailRequest();
+        request.setRecipient(recipient);
+        request.setSubject(subject);
+        request.setContent(content);
+        return notificationEmailService.send(request);
     }
 }

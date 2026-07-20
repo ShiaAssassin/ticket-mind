@@ -1,6 +1,17 @@
 spring:
   application:
     name: mcp-server
+  mail:
+    host: ${TICKET_MIND_MAIL_HOST:}
+    port: ${TICKET_MIND_MAIL_PORT:25}
+    username: ${TICKET_MIND_MAIL_USERNAME:}
+    password: ${TICKET_MIND_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${TICKET_MIND_MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${TICKET_MIND_MAIL_SMTP_STARTTLS_ENABLE:false}
 
 server:
   port: ${MCP_SERVER_PORT:18080}
@@ -11,3 +22,6 @@ ticket-mind:
     transport: ${TICKET_MIND_MCP_TRANSPORT:sse}
     server-name: ${TICKET_MIND_MCP_SERVER_NAME:ticket-mind-mcp-server}
     server-version: ${TICKET_MIND_MCP_SERVER_VERSION:0.0.1-SNAPSHOT}
+  notification:
+    mail:
+      from-address: ${TICKET_MIND_NOTIFICATION_MAIL_FROM_ADDRESS:}

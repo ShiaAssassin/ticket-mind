@@ -90,6 +90,27 @@ public class McpServer {
                                 ),
                                 List.of("date", "fromStation", "toStation")
                         )
+                ),
+                Map.of(
+                        "name", "send_notification_email",
+                        "description", "发送通知邮件，适用于票务提醒、状态通知等场景。",
+                        "inputSchema", objectSchema(
+                                Map.of(
+                                        "recipient", Map.of(
+                                                "type", "string",
+                                                "description", "收件人邮箱地址。"
+                                        ),
+                                        "subject", Map.of(
+                                                "type", "string",
+                                                "description", "邮件主题。"
+                                        ),
+                                        "content", Map.of(
+                                                "type", "string",
+                                                "description", "邮件正文内容，按纯文本发送。"
+                                        )
+                                ),
+                                List.of("recipient", "subject", "content")
+                        )
                 )
         ));
     }
@@ -111,6 +132,14 @@ public class McpServer {
                         requireText(arguments, "fromStation"),
                         requireText(arguments, "toStation"),
                         optionalText(arguments, "trainFilterFlags")
+                ));
+            }
+            case "send_notification_email" -> {
+                requireObject(arguments, "arguments");
+                yield toolJson(ticketMcpTools.sendNotificationEmail(
+                        requireText(arguments, "recipient"),
+                        requireText(arguments, "subject"),
+                        requireText(arguments, "content")
                 ));
             }
             default -> throw new McpException(JsonRpcErrorCode.METHOD_NOT_FOUND,
