@@ -29,6 +29,9 @@ public class UserAccount {
     @Column(nullable = false, length = 120)
     private String displayName;
 
+    @Column(length = 255)
+    private String email;
+
     @Column(nullable = false)
     private boolean enabled = true;
 

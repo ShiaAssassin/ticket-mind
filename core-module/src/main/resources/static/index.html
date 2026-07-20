@@ -388,6 +388,22 @@
       font-weight: 600;
     }
 
+    .task-steps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .task-step {
+      padding: 4px 8px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      font-size: 11px;
+      line-height: 1.2;
+    }
+
     .progress {
       height: 7px;
       overflow: hidden;
@@ -401,6 +417,86 @@
       background: linear-gradient(90deg, #777, #f7f7f7);
       border-radius: inherit;
       transition: width 240ms ease;
+    }
+
+    .task-summary {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .task-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .task-item {
+      display: grid;
+      gap: 6px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--line-soft);
+      border-radius: 10px;
+    }
+
+    .task-item-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .task-item-title {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .task-item-meta {
+      color: var(--subtle);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .task-status {
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .task-status.completed {
+      color: #101010;
+      background: #d7f6db;
+    }
+
+    .task-status.in_progress {
+      color: #101010;
+      background: #f8e39f;
+    }
+
+    .task-status.ready {
+      color: #101010;
+      background: #c7ddff;
+    }
+
+    .task-status.pending {
+      color: #d8d8d8;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .task-status.blocked,
+    .task-status.failed {
+      color: #fff1f1;
+      background: #7a2d2d;
+    }
+
+    .task-status.skipped {
+      color: #101010;
+      background: #d7d7d7;
     }
 
     .typing {
@@ -734,26 +830,93 @@
         .replaceAll("'", "&#039;");
     }
 
+    function formatStatusLabel(value) {
+      const labels = {
+        PLANNING: "规划中",
+        RUNNING: "执行中",
+        BLOCKED: "待澄清",
+        FAILED: "执行失败",
+        COMPLETED: "已完成",
+        CANCELLED: "已取消",
+        PENDING: "等待前置任务",
+        READY: "可开始",
+        IN_PROGRESS: "进行中",
+        SKIPPED: "已跳过"
+      };
+      return labels[value] || value || "未知状态";
+    }
+
+    function renderTaskItems(items = []) {
+      if (!items.length) {
+        return '<div class="task-summary">后端暂未返回可展示的子任务。</div>';
+      }
+
+      return `
+        <div class="task-list">
+          ${items.map((item) => `
+            <div class="task-item">
+              <div class="task-item-head">
+                <span class="task-item-title">${escapeHtml(item.title || item.taskCode || "未命名任务")}</span>
+                <span class="task-status ${(item.status || "").toLowerCase()}">${escapeHtml(formatStatusLabel(item.status))}</span>
+              </div>
+              ${item.description ? `<div class="task-item-meta">${escapeHtml(item.description)}</div>` : ""}
+              <div class="task-item-meta">执行方：${escapeHtml(item.assignee || "-")}</div>
+              ${item.dependencyTitles && item.dependencyTitles.length
+                ? `<div class="task-item-meta">依赖：${escapeHtml(item.dependencyTitles.join(" / "))}</div>`
+                : '<div class="task-item-meta">依赖：无</div>'}
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
     function renderTaskPanel(meta = {}) {
       const steps = meta.steps || ["理解用户意图", "拆解票务任务", "等待后端返回执行状态"];
       const progress = Number.isFinite(meta.progress) ? Math.max(0, Math.min(100, meta.progress)) : 36;
-      const status = meta.status || "预留状态";
+      const status = formatStatusLabel(meta.status);
+      const currentTask = meta.currentTask;
+      const summary = meta.summary;
+      const items = meta.items || [];
 
       return `
         <div class="task-panel">
           <div class="task-row">
             <b>任务拆解</b>
-            <span>${escapeHtml(steps.join(" / "))}</span>
+            <div class="task-steps">
+              ${steps.map((step) => `<span class="task-step">${escapeHtml(step)}</span>`).join("")}
+            </div>
           </div>
           <div class="task-row">
             <b>任务进度</b>
-            <div class="progress" aria-label="任务进度 ${progress}%">
-              <div class="progress-bar" style="width: ${progress}%"></div>
+            <div>
+              <div class="progress" aria-label="任务进度 ${progress}%">
+                <div class="progress-bar" style="width: ${progress}%"></div>
+              </div>
+              <div class="task-summary" style="margin-top: 6px;">${escapeHtml(`${progress}%`)}</div>
             </div>
           </div>
           <div class="task-row">
             <b>当前状态</b>
             <span>${escapeHtml(status)}</span>
+          </div>
+          ${currentTask ? `
+            <div class="task-row">
+              <b>当前任务</b>
+              <div>
+                <div class="task-summary">${escapeHtml(currentTask.title || currentTask.taskCode || "未命名任务")}</div>
+                ${currentTask.description ? `<div class="task-item-meta">${escapeHtml(currentTask.description)}</div>` : ""}
+              </div>
+            </div>
+          ` : ""}
+          ${summary ? `
+            <div class="task-row">
+              <b>结果摘要</b>
+              <div class="task-summary">${escapeHtml(summary)}</div>
+            </div>
+          ` : ""}
+          <div class="task-row">
+            <b>子任务</b>
+            ${renderTaskItems(items)}
           </div>
         </div>
       `;
@@ -824,9 +987,12 @@
       }
 
       return {
-        steps: data.steps || data.taskSteps || data.plan,
-        progress: data.progress,
-        status: data.status || data.stage || data.taskStatus
+        steps: data.taskPlan?.steps || data.steps || data.taskSteps || data.plan,
+        progress: data.taskPlan?.progress ?? data.progress,
+        status: data.taskPlan?.status || data.status || data.stage || data.taskStatus,
+        summary: data.taskPlan?.summary,
+        currentTask: data.taskPlan?.currentTask,
+        items: data.taskPlan?.items || []
       };
     }
 
@@ -887,7 +1053,9 @@
         appendMessage("assistant", reply, {
           showTaskPanel: true,
           meta,
-          metaText: "任务拆解与进度区为预留组件，可接入后端执行详情。"
+          metaText: meta && meta.items && meta.items.length
+            ? "任务规划来自后端结构化返回，前端可直接按子任务、状态和依赖渲染。"
+            : "任务拆解与进度区为预留组件，可接入后端执行详情。"
         });
       } catch (error) {
         typingMessage.remove();

@@ -32,6 +32,7 @@ CREATE TABLE `user_accounts` (
     `username` VARCHAR(80) NOT NULL UNIQUE,
     `password` VARCHAR(255) NOT NULL,
     `display_name` VARCHAR(120) NOT NULL,
+    `email` VARCHAR(255) NULL,
     `enabled` TINYINT(1) NOT NULL DEFAULT 1,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     PRIMARY KEY (`id`)

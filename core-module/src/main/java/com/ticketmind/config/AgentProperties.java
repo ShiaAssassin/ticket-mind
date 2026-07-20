@@ -83,6 +83,7 @@ public class AgentProperties {
     @Data
     public static class Mcp {
         private boolean enabled = false;
+        private String rpcUrl = "";
         private String sseUrl = "";
         private String clientName = "ticket-mind-core";
         private String clientVersion = "0.0.1-SNAPSHOT";

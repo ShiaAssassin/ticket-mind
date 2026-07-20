@@ -8,10 +8,7 @@ import com.ticketmind.agent.core.NotificationAgent;
 import com.ticketmind.agent.core.SystemPromptMemoryAgent;
 import com.ticketmind.agent.core.TaskOrchestrationAgent;
 import com.ticketmind.agent.core.TicketAgent;
-import com.ticketmind.agent.tools.AccessTools;
-import com.ticketmind.agent.tools.ExternalInfoTools;
 import com.ticketmind.agent.tools.NotifyTools;
-import com.ticketmind.agent.tools.OrderTools;
 import com.ticketmind.agent.tools.PlanTools;
 import com.ticketmind.agent.tools.TicketInfoTools;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -30,9 +27,6 @@ public class AgentConfig {
                                    StreamingChatModel streamingChatModel,
                                    ChatMemoryStore chatMemoryStore,
                                    AgentProperties properties,
-                                   AccessTools accessTools,
-                                   ExternalInfoTools externalInfoTools,
-                                   OrderTools orderTools,
                                    PlanTools planTools,
                                    TicketInfoTools ticketInfoTools) {
         return AiServices.builder(TicketAgent.class)
@@ -43,7 +37,7 @@ public class AgentConfig {
                         .maxMessages(chatMemoryMaxMessages(properties))
                         .chatMemoryStore(chatMemoryStore)
                         .build())
-                .tools(accessTools, externalInfoTools, orderTools, planTools, ticketInfoTools)
+                .tools(planTools, ticketInfoTools)
                 .build();
     }
 
@@ -51,9 +45,6 @@ public class AgentConfig {
     public BusinessExecutionAgent businessExecutionAgent(ChatModel chatModel,
                                                         ChatMemoryStore chatMemoryStore,
                                                         AgentProperties properties,
-                                                        AccessTools accessTools,
-                                                        ExternalInfoTools externalInfoTools,
-                                                        OrderTools orderTools,
                                                         PlanTools planTools,
                                                         TicketInfoTools ticketInfoTools) {
         return AiServices.builder(BusinessExecutionAgent.class)
@@ -63,7 +54,7 @@ public class AgentConfig {
                         .maxMessages(chatMemoryMaxMessages(properties))
                         .chatMemoryStore(chatMemoryStore)
                         .build())
-                .tools(accessTools, externalInfoTools, orderTools, planTools, ticketInfoTools)
+                .tools(planTools, ticketInfoTools)
                 .build();
     }
 

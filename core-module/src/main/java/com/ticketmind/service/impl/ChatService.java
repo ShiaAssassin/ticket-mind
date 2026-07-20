@@ -24,7 +24,10 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -54,12 +57,13 @@ public class ChatService {
         saveMessage(session, ChatMessageRole.USER, prompt);
 
         String memoryId = sessionMemoryId(session);
-        String answer = taskWorkflowEngine.run(memoryId, prompt);
+        TaskWorkflowResult workflowResult = taskWorkflowEngine.run(memoryId, prompt);
+        String answer = workflowResult.answer();
         systemPromptMemoryManager.markPromptInjected(memoryId);
         systemPromptMemoryManager.updateFromUserMessage(memoryId, prompt);
         saveMessage(session, ChatMessageRole.ASSISTANT, answer);
         touchSession(session);
-        return new ChatResponse(session.getId(), answer);
+        return new ChatResponse(session.getId(), answer, toTaskPlanView(workflowResult.plan()));
     }
 
     public SseEmitter stream(Long sessionId, String message) {
@@ -81,7 +85,7 @@ public class ChatService {
                 })
                 .onCompleteResponse(response -> {
                     transactionTemplate.executeWithoutResult(status -> saveAssistantReply(session.getId(), answer.toString()));
-                    send(emitter, "done", new ChatResponse(session.getId(), answer.toString()));
+                    send(emitter, "done", new ChatResponse(session.getId(), answer.toString(), null));
                     emitter.complete();
                 })
                 .onError(emitter::completeWithError)
@@ -201,6 +205,69 @@ public class ChatService {
         } catch (IOException exception) {
             throw new StreamSendException(exception);
         }
+    }
+
+    private TaskPlanView toTaskPlanView(TaskPlanSnapshot snapshot) {
+        if (snapshot == null) {
+            return null;
+        }
+
+        List<TaskPlanItem> items = snapshot.items() == null ? List.of() : snapshot.items();
+        Map<String, String> titleByCode = new LinkedHashMap<>();
+        for (TaskPlanItem item : items) {
+            titleByCode.put(item.taskCode(), item.title());
+        }
+
+        int totalTasks = items.size();
+        int completedTasks = (int) items.stream()
+                .filter(item -> item.status() == TaskExecutionStatus.COMPLETED || item.status() == TaskExecutionStatus.SKIPPED)
+                .count();
+        int progress = totalTasks == 0 ? 100 : Math.min(100, (int) Math.round(completedTasks * 100.0 / totalTasks));
+
+        List<TaskPlanViewItem> viewItems = items.stream()
+                .map(item -> toTaskPlanViewItem(item, titleByCode))
+                .toList();
+
+        List<String> steps = items.stream()
+                .map(TaskPlanItem::title)
+                .toList();
+
+        TaskPlanViewItem currentTask = items.stream()
+                .filter(item -> item.status() == TaskExecutionStatus.IN_PROGRESS || item.status() == TaskExecutionStatus.READY)
+                .findFirst()
+                .map(item -> toTaskPlanViewItem(item, titleByCode))
+                .orElseGet(() -> items.isEmpty() ? null : toTaskPlanViewItem(items.get(items.size() - 1), titleByCode));
+
+        return new TaskPlanView(
+                snapshot.planId(),
+                snapshot.taskType(),
+                snapshot.summary(),
+                snapshot.status() == null ? "" : snapshot.status().name(),
+                progress,
+                totalTasks,
+                completedTasks,
+                steps,
+                currentTask,
+                viewItems
+        );
+    }
+
+    private TaskPlanViewItem toTaskPlanViewItem(TaskPlanItem item, Map<String, String> titleByCode) {
+        List<String> dependencyTitles = new ArrayList<>();
+        for (String dependencyCode : item.dependencies() == null ? List.<String>of() : item.dependencies()) {
+            dependencyTitles.add(titleByCode.getOrDefault(dependencyCode, dependencyCode));
+        }
+        return new TaskPlanViewItem(
+                item.taskCode(),
+                item.title(),
+                item.description(),
+                item.assignee() == null ? "" : item.assignee().name(),
+                item.dependencies() == null ? List.of() : item.dependencies(),
+                List.copyOf(dependencyTitles),
+                item.status() == null ? "" : item.status().name(),
+                item.result(),
+                item.predefined()
+        );
     }
 
     private static class StreamSendException extends RuntimeException {

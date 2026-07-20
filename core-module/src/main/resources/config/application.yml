@@ -89,6 +89,7 @@ ticket-mind:
     todo-list-archive-routing-key: ${RABBITMQ_TODO_LIST_ARCHIVE_ROUTING_KEY:todo-list.archived}
   mcp:
     enabled: ${MCP_ENABLED:false}
+    rpc-url: ${MCP_RPC_URL:http://localhost:18080/internal/tools/mcp}
     sse-url: ${MCP_SSE_URL:}
     client-name: ${MCP_CLIENT_NAME:ticket-mind-core}
     client-version: ${MCP_CLIENT_VERSION:0.0.1-SNAPSHOT}

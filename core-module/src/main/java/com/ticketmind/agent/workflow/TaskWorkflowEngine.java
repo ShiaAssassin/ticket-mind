@@ -61,16 +61,20 @@ public class TaskWorkflowEngine {
 
     private volatile CompiledGraph<TaskWorkflowState> compiledGraph;
 
-    public String run(String memoryId, String userMessage) {
+    public TaskWorkflowResult run(String memoryId, String userMessage) {
         try {
             Optional<TaskWorkflowState> output = graph().invoke(Map.of(
                     TaskWorkflowState.MEMORY_ID, memoryId,
                     TaskWorkflowState.USER_MESSAGE, userMessage
             ));
             TaskWorkflowState state = output.orElseThrow(() -> new IllegalStateException("task workflow returned empty state"));
-            return state.finalAnswer();
+            return new TaskWorkflowResult(state.finalAnswer(), state.plan(), state.finalStatus());
         } catch (Exception ex) {
-            return ticketAgent.chat(memoryId, systemPromptMemories(memoryId), userMessage);
+            return new TaskWorkflowResult(
+                    ticketAgent.chat(memoryId, systemPromptMemories(memoryId), userMessage),
+                    null,
+                    TaskPlanStatus.COMPLETED
+            );
         }
     }
 

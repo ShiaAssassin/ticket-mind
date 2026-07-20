@@ -92,6 +92,54 @@ public class McpServer {
                         )
                 ),
                 Map.of(
+                        "name", "query_ticket_options",
+                        "description", "查询并筛选符合席别偏好的车票候选，返回适合直接推荐给用户的车次列表。",
+                        "inputSchema", objectSchema(
+                                Map.of(
+                                        "date", Map.of("type", "string", "description", "查询日期，格式 yyyy-MM-dd。"),
+                                        "fromStation", Map.of("type", "string", "description", "出发站中文名或电报码。"),
+                                        "toStation", Map.of("type", "string", "description", "到达站中文名或电报码。"),
+                                        "seatTypePreference", Map.of("type", "string", "description", "可选席别偏好，例如 二等座、一等座、硬卧。")
+                                ),
+                                List.of("date", "fromStation", "toStation")
+                        )
+                ),
+                Map.of(
+                        "name", "query_ticket_rules",
+                        "description", "查询购票、退票、改签、候补等常见规则摘要。",
+                        "inputSchema", objectSchema(
+                                Map.of(
+                                        "ruleTopic", Map.of("type", "string", "description", "规则主题，例如 退票、改签、候补。")
+                                ),
+                                List.of("ruleTopic")
+                        )
+                ),
+                Map.of(
+                        "name", "plan_trip",
+                        "description", "根据出发地、目的地、日期和偏好返回直达出行方案建议。",
+                        "inputSchema", objectSchema(
+                                Map.of(
+                                        "departure", Map.of("type", "string", "description", "出发地。"),
+                                        "destination", Map.of("type", "string", "description", "目的地。"),
+                                        "date", Map.of("type", "string", "description", "出发日期，格式 yyyy-MM-dd。"),
+                                        "preference", Map.of("type", "string", "description", "出行偏好，例如 二等座、早班车。")
+                                ),
+                                List.of("departure", "destination", "date")
+                        )
+                ),
+                Map.of(
+                        "name", "send_notification",
+                        "description", "发送票务通知。目前仅支持 email 渠道。",
+                        "inputSchema", objectSchema(
+                                Map.of(
+                                        "channel", Map.of("type", "string", "description", "通知渠道，当前仅支持 email。"),
+                                        "recipient", Map.of("type", "string", "description", "接收人，例如邮箱地址。"),
+                                        "content", Map.of("type", "string", "description", "通知正文内容。")
+                                ),
+                                List.of("channel", "recipient", "content")
+                        )
+                ),
+                Map.of(
                         "name", "send_notification_email",
                         "description", "发送通知邮件，适用于票务提醒、状态通知等场景。",
                         "inputSchema", objectSchema(
@@ -132,6 +180,38 @@ public class McpServer {
                         requireText(arguments, "fromStation"),
                         requireText(arguments, "toStation"),
                         optionalText(arguments, "trainFilterFlags")
+                ));
+            }
+            case "query_ticket_options" -> {
+                requireObject(arguments, "arguments");
+                yield toolJson(ticketMcpTools.queryTicketOptions(
+                        requireText(arguments, "date"),
+                        requireText(arguments, "fromStation"),
+                        requireText(arguments, "toStation"),
+                        optionalText(arguments, "seatTypePreference")
+                ));
+            }
+            case "query_ticket_rules" -> {
+                requireObject(arguments, "arguments");
+                yield toolJson(ticketMcpTools.queryTicketRules(
+                        requireText(arguments, "ruleTopic")
+                ));
+            }
+            case "plan_trip" -> {
+                requireObject(arguments, "arguments");
+                yield toolJson(ticketMcpTools.planTrip(
+                        requireText(arguments, "departure"),
+                        requireText(arguments, "destination"),
+                        requireText(arguments, "date"),
+                        optionalText(arguments, "preference")
+                ));
+            }
+            case "send_notification" -> {
+                requireObject(arguments, "arguments");
+                yield toolJson(ticketMcpTools.sendNotification(
+                        requireText(arguments, "channel"),
+                        requireText(arguments, "recipient"),
+                        requireText(arguments, "content")
                 ));
             }
             case "send_notification_email" -> {
