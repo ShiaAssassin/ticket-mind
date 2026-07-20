@@ -1,16 +1,12 @@
 package com.ticketmind.service.impl;
 
 import com.ticketmind.agent.core.TicketAgent;
-import com.ticketmind.agent.memory.SystemPromptMemoryService;
-import com.ticketmind.agent.workflow.TaskWorkflowService;
+import com.ticketmind.agent.memory.SystemPromptMemoryManager;
+import com.ticketmind.agent.workflow.TaskWorkflowEngine;
 import com.ticketmind.common.BusinessException;
 import com.ticketmind.common.ResultCode;
 import com.ticketmind.context.UserContextHolder;
-import com.ticketmind.model.dto.ChatHistoryResponse;
-import com.ticketmind.model.dto.ChatMessageHistoryItem;
-import com.ticketmind.model.dto.ChatResponse;
-import com.ticketmind.model.dto.ChatSessionListItem;
-import com.ticketmind.model.dto.ChatSessionListResponse;
+import com.ticketmind.model.dto.*;
 import com.ticketmind.model.entity.ChatMessageRecord;
 import com.ticketmind.model.entity.ChatMessageRole;
 import com.ticketmind.model.entity.ChatSession;
@@ -20,7 +16,6 @@ import com.ticketmind.repository.ChatSessionRepository;
 import com.ticketmind.repository.UserAccountRepository;
 import dev.langchain4j.service.TokenStream;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -30,8 +25,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatService {
@@ -40,9 +35,9 @@ public class ChatService {
 
     private final TicketAgent ticketAgent;
 
-    private final TaskWorkflowService taskWorkflowService;
+    private final TaskWorkflowEngine taskWorkflowEngine;
 
-    private final SystemPromptMemoryService systemPromptMemoryService;
+    private final SystemPromptMemoryManager systemPromptMemoryManager;
 
     private final ChatSessionRepository chatSessionRepository;
 
@@ -59,9 +54,9 @@ public class ChatService {
         saveMessage(session, ChatMessageRole.USER, prompt);
 
         String memoryId = sessionMemoryId(session);
-        String answer = taskWorkflowService.run(memoryId, prompt);
-        systemPromptMemoryService.markPromptInjected(memoryId);
-        systemPromptMemoryService.updateFromUserMessage(memoryId, prompt);
+        String answer = taskWorkflowEngine.run(memoryId, prompt);
+        systemPromptMemoryManager.markPromptInjected(memoryId);
+        systemPromptMemoryManager.updateFromUserMessage(memoryId, prompt);
         saveMessage(session, ChatMessageRole.ASSISTANT, answer);
         touchSession(session);
         return new ChatResponse(session.getId(), answer);
@@ -73,10 +68,10 @@ public class ChatService {
 
         SseEmitter emitter = new SseEmitter(STREAM_TIMEOUT_MILLIS);
         StringBuilder answer = new StringBuilder();
-        String memoryId = sessionMemoryId(session);
-        String systemPromptMemories = systemPromptMemoryService.renderForSystemPrompt(memoryId);
-        systemPromptMemoryService.markPromptInjected(memoryId);
-        systemPromptMemoryService.updateFromUserMessage(memoryId, prompt);
+        String memoryId = sessionMemoryId(Objects.requireNonNull(session));
+        String systemPromptMemories = systemPromptMemoryManager.renderForSystemPrompt(memoryId);
+        systemPromptMemoryManager.markPromptInjected(memoryId);
+        systemPromptMemoryManager.updateFromUserMessage(memoryId, prompt);
         TokenStream tokenStream = ticketAgent.stream(memoryId, systemPromptMemories, prompt);
 
         tokenStream
@@ -89,10 +84,7 @@ public class ChatService {
                     send(emitter, "done", new ChatResponse(session.getId(), answer.toString()));
                     emitter.complete();
                 })
-                .onError(error -> {
-                    log.warn("Streaming chat failed, sessionId={}", session.getId(), error);
-                    emitter.completeWithError(error);
-                })
+                .onError(emitter::completeWithError)
                 .start();
 
         return emitter;

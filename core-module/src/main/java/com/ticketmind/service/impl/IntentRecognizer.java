@@ -9,12 +9,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-@Service
+@Component
 @RequiredArgsConstructor
-public class IntentRecognitionService {
+public class IntentRecognizer {
 
     private static final double BLANK_MESSAGE_CONFIDENCE = 0.20D;
     private static final double AGENT_FALLBACK_CONFIDENCE = 0.60D;

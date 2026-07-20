@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Component
 @Order(1)
@@ -55,7 +56,7 @@ public class KnowledgeBaseInitializer implements ApplicationRunner {
             throw new IllegalStateException("Failed to scan knowledge resources", ex);
         }
 
-        List<Resource> sortedResources = List.of(resources).stream()
+        List<Resource> sortedResources = Stream.of(resources)
                 .filter(Resource::exists)
                 .sorted(Comparator.comparing(this::resourceName))
                 .toList();

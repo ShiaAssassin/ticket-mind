@@ -1,0 +1,11 @@
+{
+  "tasks": [
+    {
+      "taskCode": "collect-ticket-info",
+      "title": "查询票务信息",
+      "description": "查询用户关心的车次、余票、票价、时刻或票务规则。",
+      "assignee": "BUSINESS_EXECUTOR",
+      "dependencies": []
+    }
+  ]
+}

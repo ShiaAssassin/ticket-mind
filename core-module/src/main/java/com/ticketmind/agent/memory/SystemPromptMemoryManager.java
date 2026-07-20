@@ -8,7 +8,7 @@ import com.ticketmind.common.ResultCode;
 import com.ticketmind.config.AgentProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
@@ -22,9 +22,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-@Service
+@Component
 @RequiredArgsConstructor
-public class SystemPromptMemoryService {
+public class SystemPromptMemoryManager {
 
     private static final String KEY_PREFIX = "ticket-mind:system-prompt:memory:";
     private static final String EMPTY_INJECTION = "";
@@ -109,11 +109,10 @@ public class SystemPromptMemoryService {
                 }
                 if (!Objects.equals(nextScope, memory.scope())) {
                     updated.add(copy(memory, memory.content(), nextScope, memory.priority(), now, expiresAt(now)));
-                    changed = true;
                 } else {
                     updated.add(copy(memory, memory.content(), memory.scope(), memory.priority(), memory.updatedAt(), expiresAt(now)));
-                    changed = true;
                 }
+                changed = true;
             }
 
             if (changed) {
@@ -374,7 +373,7 @@ public class SystemPromptMemoryService {
             } catch (NumberFormatException ignored) {
                 return "permanent";
             }
-        };
+        }
         return "permanent";
     }
 

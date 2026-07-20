@@ -1,4 +1,4 @@
-package com.ticketmind.service.task;
+package com.ticketmind.agent.workflow;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ticketmind.common.BusinessException;
@@ -10,7 +10,7 @@ import com.ticketmind.model.dto.TaskPlanSnapshot;
 import com.ticketmind.model.dto.TaskPlanStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
@@ -18,9 +18,9 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-@Service
+@Component
 @RequiredArgsConstructor
-public class TaskPlanService {
+public class TaskPlanStore {
 
     private static final String KEY_PREFIX = "ticket-mind:task:plan:";
 

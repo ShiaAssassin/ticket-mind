@@ -1,12 +1,12 @@
 package com.ticketmind.config;
 
-import com.ticketmind.agent.core.BusinessExecutorAgent;
+import com.ticketmind.agent.core.BusinessExecutionAgent;
 import com.ticketmind.agent.core.SummaryAgent;
 import com.ticketmind.agent.core.IntentJudgeAgent;
 import com.ticketmind.agent.core.MonitorAgent;
 import com.ticketmind.agent.core.NotificationAgent;
 import com.ticketmind.agent.core.SystemPromptMemoryAgent;
-import com.ticketmind.agent.core.TaskOrchestratorAgent;
+import com.ticketmind.agent.core.TaskOrchestrationAgent;
 import com.ticketmind.agent.core.TicketAgent;
 import com.ticketmind.agent.tools.AccessTools;
 import com.ticketmind.agent.tools.ExternalInfoTools;
@@ -48,15 +48,15 @@ public class AgentConfig {
     }
 
     @Bean
-    public BusinessExecutorAgent businessExecutorAgent(ChatModel chatModel,
-                                                       ChatMemoryStore chatMemoryStore,
-                                                       AgentProperties properties,
-                                                       AccessTools accessTools,
-                                                       ExternalInfoTools externalInfoTools,
-                                                       OrderTools orderTools,
-                                                       PlanTools planTools,
-                                                       TicketInfoTools ticketInfoTools) {
-        return AiServices.builder(BusinessExecutorAgent.class)
+    public BusinessExecutionAgent businessExecutionAgent(ChatModel chatModel,
+                                                        ChatMemoryStore chatMemoryStore,
+                                                        AgentProperties properties,
+                                                        AccessTools accessTools,
+                                                        ExternalInfoTools externalInfoTools,
+                                                        OrderTools orderTools,
+                                                        PlanTools planTools,
+                                                        TicketInfoTools ticketInfoTools) {
+        return AiServices.builder(BusinessExecutionAgent.class)
                 .chatModel(chatModel)
                 .chatMemoryProvider(memoryId -> MessageWindowChatMemory.builder()
                         .id("biz-" + memoryId)
@@ -74,7 +74,7 @@ public class AgentConfig {
     }
 
     @Bean
-    public SummaryAgent conversationSummaryAgent(
+    public SummaryAgent summaryAgent(
             ChatModel chatModel) {
         return AiServices.builder(SummaryAgent.class)
                 .chatModel(chatModel)
@@ -89,8 +89,8 @@ public class AgentConfig {
     }
 
     @Bean
-    public TaskOrchestratorAgent taskOrchestratorAgent(ChatModel chatModel) {
-        return AiServices.builder(TaskOrchestratorAgent.class)
+    public TaskOrchestrationAgent taskOrchestrationAgent(ChatModel chatModel) {
+        return AiServices.builder(TaskOrchestrationAgent.class)
                 .chatModel(chatModel)
                 .build();
     }

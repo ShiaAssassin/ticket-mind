@@ -1,0 +1,20 @@
+{
+  "tasks": [
+    {
+      "taskCode": "plan-trip-options",
+      "title": "规划出行方案",
+      "description": "结合用户出发地、目的地、日期和偏好规划可选车次或中转方案。",
+      "assignee": "BUSINESS_EXECUTOR",
+      "dependencies": []
+    },
+    {
+      "taskCode": "summarize-trip-plan",
+      "title": "整理方案摘要",
+      "description": "将已完成的出行方案整理为面向用户的简洁结果。",
+      "assignee": "SUMMARY",
+      "dependencies": [
+        "plan-trip-options"
+      ]
+    }
+  ]
+}

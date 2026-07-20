@@ -1,0 +1,29 @@
+{
+  "tasks": [
+    {
+      "taskCode": "check-ticket-options",
+      "title": "查询可购车票",
+      "description": "查询满足用户条件的可购车票、席别和候补可能性。",
+      "assignee": "BUSINESS_EXECUTOR",
+      "dependencies": []
+    },
+    {
+      "taskCode": "prepare-booking-action",
+      "title": "准备购票动作",
+      "description": "根据查票结果和用户约束准备下单、候补或下一步确认建议。",
+      "assignee": "BUSINESS_EXECUTOR",
+      "dependencies": [
+        "check-ticket-options"
+      ]
+    },
+    {
+      "taskCode": "notify-booking-progress",
+      "title": "生成购票通知",
+      "description": "生成购票进度、风险和下一步操作通知。",
+      "assignee": "NOTIFICATION",
+      "dependencies": [
+        "prepare-booking-action"
+      ]
+    }
+  ]
+}

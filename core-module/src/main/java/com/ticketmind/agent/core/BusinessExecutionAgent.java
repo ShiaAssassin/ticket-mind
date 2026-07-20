@@ -5,7 +5,7 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 
-public interface BusinessExecutorAgent {
+public interface BusinessExecutionAgent {
 
     @SystemMessage("""
             你是 TicketMind 的业务执行 Agent。

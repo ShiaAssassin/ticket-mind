@@ -2,48 +2,29 @@ package com.ticketmind.agent.workflow;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ticketmind.agent.memory.SystemPromptMemoryService;
-import com.ticketmind.agent.core.BusinessExecutorAgent;
-import com.ticketmind.agent.core.MonitorAgent;
-import com.ticketmind.agent.core.NotificationAgent;
-import com.ticketmind.agent.core.SummaryAgent;
-import com.ticketmind.agent.core.TaskOrchestratorAgent;
-import com.ticketmind.agent.core.TicketAgent;
-import com.ticketmind.model.dto.IntentRecognitionResult;
-import com.ticketmind.model.dto.TaskAssignee;
-import com.ticketmind.model.dto.TaskExecutionStatus;
-import com.ticketmind.model.dto.TaskPlanItem;
-import com.ticketmind.model.dto.TaskPlanSnapshot;
-import com.ticketmind.model.dto.TaskPlanStatus;
+import com.ticketmind.agent.core.*;
+import com.ticketmind.agent.memory.SystemPromptMemoryManager;
+import com.ticketmind.model.dto.*;
 import com.ticketmind.model.entity.IntentType;
-import com.ticketmind.service.impl.IntentRecognitionService;
-import com.ticketmind.service.task.TaskPlanService;
+import com.ticketmind.service.impl.IntentRecognizer;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.bsc.langgraph4j.CompiledGraph;
 import org.bsc.langgraph4j.GraphStateException;
 import org.bsc.langgraph4j.StateGraph;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.bsc.langgraph4j.StateGraph.END;
 import static org.bsc.langgraph4j.StateGraph.START;
 import static org.bsc.langgraph4j.action.AsyncEdgeAction.edge_async;
 import static org.bsc.langgraph4j.action.AsyncNodeAction.node_async;
 
-@Slf4j
-@Service
+@Component
 @RequiredArgsConstructor
-public class TaskWorkflowService {
+public class TaskWorkflowEngine {
 
     private static final String RECOGNIZE_INTENT = "recognize_intent";
     private static final String DIRECT_REPLY = "direct_reply";
@@ -58,9 +39,9 @@ public class TaskWorkflowService {
 
     private final TicketAgent ticketAgent;
 
-    private final TaskOrchestratorAgent taskOrchestratorAgent;
+    private final TaskOrchestrationAgent taskOrchestrationAgent;
 
-    private final BusinessExecutorAgent businessExecutorAgent;
+    private final BusinessExecutionAgent businessExecutionAgent;
 
     private final MonitorAgent monitorAgent;
 
@@ -68,11 +49,13 @@ public class TaskWorkflowService {
 
     private final SummaryAgent summaryAgent;
 
-    private final SystemPromptMemoryService systemPromptMemoryService;
+    private final SystemPromptMemoryManager systemPromptMemoryManager;
 
-    private final IntentRecognitionService intentRecognitionService;
+    private final IntentRecognizer intentRecognizer;
 
-    private final TaskPlanService taskPlanService;
+    private final TaskPlanStore taskPlanStore;
+
+    private final TaskTemplateCatalog taskTemplateCatalog;
 
     private final ObjectMapper objectMapper;
 
@@ -87,7 +70,6 @@ public class TaskWorkflowService {
             TaskWorkflowState state = output.orElseThrow(() -> new IllegalStateException("task workflow returned empty state"));
             return state.finalAnswer();
         } catch (Exception ex) {
-            log.warn("Task workflow failed, fallback to TicketAgent. memoryId={}", memoryId, ex);
             return ticketAgent.chat(memoryId, systemPromptMemories(memoryId), userMessage);
         }
     }
@@ -131,7 +113,7 @@ public class TaskWorkflowService {
     }
 
     private Map<String, Object> recognizeIntent(TaskWorkflowState state) {
-        IntentRecognitionResult result = intentRecognitionService.recognize(state.userMessage());
+        IntentRecognitionResult result = intentRecognizer.recognize(state.userMessage());
         return Map.of(TaskWorkflowState.INTENT_TYPE, result.intentType());
     }
 
@@ -145,8 +127,8 @@ public class TaskWorkflowService {
     }
 
     private Map<String, Object> planTasks(TaskWorkflowState state) {
-        List<TaskPlanItem> predefinedTasks = predefinedTasks(state.intentType());
-        TaskPlanSnapshot basePlan = taskPlanService.create(
+        List<TaskPlanItem> predefinedTasks = taskTemplateCatalog.load(state.intentType());
+        TaskPlanSnapshot basePlan = taskPlanStore.create(
                 state.intentType().name(),
                 state.userMessage(),
                 "",
@@ -155,7 +137,7 @@ public class TaskWorkflowService {
         List<TaskPlanItem> additionalTasks = requestAdditionalTasks(state, basePlan);
         TaskPlanSnapshot planned = additionalTasks.isEmpty()
                 ? basePlan
-                : taskPlanService.save(new TaskPlanSnapshot(
+                : taskPlanStore.save(new TaskPlanSnapshot(
                         basePlan.planId(),
                         basePlan.taskType(),
                         basePlan.userMessage(),
@@ -182,17 +164,16 @@ public class TaskWorkflowService {
 
         TaskPlanSnapshot inProgressSnapshot = withStatus(replaceTask(
                 snapshot,
-                taskPlanService.updateTask(task, TaskExecutionStatus.IN_PROGRESS, task.result())
+                taskPlanStore.updateTask(task, TaskExecutionStatus.IN_PROGRESS, task.result())
         ), TaskPlanStatus.RUNNING);
-        inProgressSnapshot = taskPlanService.save(inProgressSnapshot);
+        inProgressSnapshot = taskPlanStore.save(inProgressSnapshot);
 
         TaskPlanItem completedTask;
         try {
             String result = executeTask(state, inProgressSnapshot, task);
-            completedTask = taskPlanService.updateTask(task, statusFromResult(result), result);
+            completedTask = taskPlanStore.updateTask(task, statusFromResult(result), result);
         } catch (Exception ex) {
-            log.warn("Task execution failed. planId={}, taskCode={}", snapshot.planId(), task.taskCode(), ex);
-            completedTask = taskPlanService.updateTask(task, TaskExecutionStatus.FAILED, ex.getMessage());
+            completedTask = taskPlanStore.updateTask(task, TaskExecutionStatus.FAILED, ex.getMessage());
         }
 
         TaskPlanSnapshot updatedSnapshot = markReadyTasks(replaceTask(inProgressSnapshot, completedTask));
@@ -216,39 +197,12 @@ public class TaskWorkflowService {
 
         TaskPlanStatus finalStatus = finalStatus(snapshot);
         String summary = summarizeFinalResult(state, snapshot, finalStatus);
-        TaskPlanSnapshot completed = taskPlanService.complete(snapshot, summary, finalStatus);
+        TaskPlanSnapshot completed = taskPlanStore.complete(snapshot, summary, finalStatus);
         return Map.of(
                 TaskWorkflowState.PLAN, completed,
                 TaskWorkflowState.FINAL_STATUS, finalStatus,
                 TaskWorkflowState.FINAL_ANSWER, summary
         );
-    }
-
-    private List<TaskPlanItem> predefinedTasks(IntentType intentType) {
-        OffsetDateTime now = OffsetDateTime.now();
-        return switch (intentType) {
-            case INFORMATION_INQUIRY -> List.of(task("collect-ticket-info", "查询票务信息",
-                    "查询用户关心的车次、余票、票价、时刻或票务规则。", TaskAssignee.BUSINESS_EXECUTOR, List.of(), true, now));
-            case TRIP_PLANNING -> List.of(
-                    task("plan-trip-options", "规划出行方案",
-                            "结合用户出发地、目的地、日期和偏好规划可选车次或中转方案。", TaskAssignee.BUSINESS_EXECUTOR, List.of(), true, now),
-                    task("summarize-trip-plan", "整理方案摘要",
-                            "将已完成的出行方案整理为面向用户的简洁结果。", TaskAssignee.SUMMARY, List.of("plan-trip-options"), true, now)
-            );
-            case TICKET_BOOKING -> List.of(
-                    task("check-ticket-options", "查询可购车票",
-                            "查询满足用户条件的可购车票、席别和候补可能性。", TaskAssignee.BUSINESS_EXECUTOR, List.of(), true, now),
-                    task("prepare-booking-action", "准备购票动作",
-                            "根据查票结果和用户约束准备下单、候补或下一步确认建议。", TaskAssignee.BUSINESS_EXECUTOR, List.of("check-ticket-options"), true, now),
-                    task("notify-booking-progress", "生成购票通知",
-                            "生成购票进度、风险和下一步操作通知。", TaskAssignee.NOTIFICATION, List.of("prepare-booking-action"), true, now)
-            );
-            case ORDER_MANAGEMENT -> List.of(task("handle-order-request", "处理订单请求",
-                    "查询或处理订单状态、支付、取消、退票、改签等订单相关诉求。", TaskAssignee.BUSINESS_EXECUTOR, List.of(), true, now));
-            case ACCOUNT_MANAGEMENT -> List.of(task("handle-account-request", "处理账号请求",
-                    "处理登录、实名、乘车人、账号异常等账号相关诉求。", TaskAssignee.BUSINESS_EXECUTOR, List.of(), true, now));
-            case NON_BUSINESS_CHAT -> List.of();
-        };
     }
 
     private TaskPlanItem task(String taskCode,
@@ -265,10 +219,9 @@ public class TaskWorkflowService {
 
     private List<TaskPlanItem> requestAdditionalTasks(TaskWorkflowState state, TaskPlanSnapshot basePlan) {
         try {
-            String response = taskOrchestratorAgent.suggestAdditionalTasks(planningContext(state, basePlan));
+            String response = taskOrchestrationAgent.suggestAdditionalTasks(planningContext(state, basePlan));
             return parseAdditionalTasks(response, basePlan);
         } catch (Exception ex) {
-            log.warn("Task orchestrator additional planning failed, using predefined plan. planId={}", basePlan.planId(), ex);
             return List.of();
         }
     }
@@ -349,7 +302,7 @@ public class TaskWorkflowService {
         boolean changed = false;
         for (TaskPlanItem item : snapshot.items()) {
             if (item.status() == TaskExecutionStatus.PENDING && completedCodes.containsAll(item.dependencies())) {
-                updatedItems.add(taskPlanService.updateTask(item, TaskExecutionStatus.READY, item.result()));
+                updatedItems.add(taskPlanStore.updateTask(item, TaskExecutionStatus.READY, item.result()));
                 changed = true;
             } else {
                 updatedItems.add(item);
@@ -360,7 +313,7 @@ public class TaskWorkflowService {
                 ? new TaskPlanSnapshot(snapshot.planId(), snapshot.taskType(), snapshot.userMessage(), snapshot.summary(),
                 snapshot.status(), List.copyOf(updatedItems), snapshot.createdAt(), snapshot.updatedAt())
                 : snapshot;
-        return taskPlanService.save(updatedSnapshot);
+        return taskPlanStore.save(updatedSnapshot);
     }
 
     private TaskPlanSnapshot replaceTask(TaskPlanSnapshot snapshot, TaskPlanItem updatedTask) {
@@ -393,7 +346,7 @@ public class TaskWorkflowService {
     private String executeTask(TaskWorkflowState state, TaskPlanSnapshot snapshot, TaskPlanItem task) {
         String executionContext = executionContext(state, snapshot, task);
         return switch (task.assignee()) {
-            case BUSINESS_EXECUTOR -> businessExecutorAgent.execute(
+            case BUSINESS_EXECUTOR -> businessExecutionAgent.execute(
                     state.memoryId(),
                     systemPromptMemories(state.memoryId()),
                     executionContext
@@ -401,7 +354,7 @@ public class TaskWorkflowService {
             case MONITOR -> monitorAgent.execute(executionContext);
             case NOTIFICATION -> notificationAgent.notify(executionContext);
             case SUMMARY -> summaryAgent.summarize(executionContext);
-            case ORCHESTRATOR -> taskOrchestratorAgent.suggestAdditionalTasks(executionContext);
+            case ORCHESTRATOR -> taskOrchestrationAgent.suggestAdditionalTasks(executionContext);
         };
     }
 
@@ -464,7 +417,6 @@ public class TaskWorkflowService {
         try {
             return summaryAgent.summarize(prompt);
         } catch (Exception ex) {
-            log.warn("Final summary agent failed. planId={}", snapshot.planId(), ex);
             return fallbackSummary(snapshot, status);
         }
     }
@@ -521,7 +473,7 @@ public class TaskWorkflowService {
     }
 
     private String systemPromptMemories(String memoryId) {
-        return systemPromptMemoryService.renderForSystemPrompt(memoryId);
+        return systemPromptMemoryManager.renderForSystemPrompt(memoryId);
     }
 
     private Set<String> taskCodes(List<TaskPlanItem> items) {

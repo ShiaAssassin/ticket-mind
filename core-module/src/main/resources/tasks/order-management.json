@@ -1,0 +1,11 @@
+{
+  "tasks": [
+    {
+      "taskCode": "handle-order-request",
+      "title": "处理订单请求",
+      "description": "查询或处理订单状态、支付、取消、退票、改签等订单相关诉求。",
+      "assignee": "BUSINESS_EXECUTOR",
+      "dependencies": []
+    }
+  ]
+}

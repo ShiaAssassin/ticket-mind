@@ -174,7 +174,7 @@ public class KnowledgeService {
     }
 
     private List<KnowledgeChunk> loadSearchCandidates(String query, List<Double> queryEmbedding, int topK) {
-        List<Long> vectorCandidateIds = searchCandidateIdsByVector(query, queryEmbedding, topK);
+        List<Long> vectorCandidateIds = searchCandidateIdsByVector(queryEmbedding, topK);
         if (!vectorCandidateIds.isEmpty()) {
             Map<Long, KnowledgeChunk> chunkById = knowledgeChunkRepository.findAllById(vectorCandidateIds).stream()
                     .collect(Collectors.toMap(KnowledgeChunk::getId, Function.identity()));
@@ -189,7 +189,7 @@ public class KnowledgeService {
         return knowledgeChunkRepository.findAll();
     }
 
-    private List<Long> searchCandidateIdsByVector(String query, List<Double> queryEmbedding, int topK) {
+    private List<Long> searchCandidateIdsByVector(List<Double> queryEmbedding, int topK) {
         if (!agentProperties.getChroma().isEnabled() || queryEmbedding.isEmpty()) {
             return List.of();
         }

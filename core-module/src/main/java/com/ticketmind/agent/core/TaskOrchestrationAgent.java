@@ -3,7 +3,7 @@ package com.ticketmind.agent.core;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 
-public interface TaskOrchestratorAgent {
+public interface TaskOrchestrationAgent {
 
     @SystemMessage("""
             你是 TicketMind 的任务编排 Agent。

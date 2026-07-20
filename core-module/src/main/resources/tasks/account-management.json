@@ -1,0 +1,11 @@
+{
+  "tasks": [
+    {
+      "taskCode": "handle-account-request",
+      "title": "处理账号请求",
+      "description": "处理登录、实名、乘车人、账号异常等账号相关诉求。",
+      "assignee": "BUSINESS_EXECUTOR",
+      "dependencies": []
+    }
+  ]
+}
