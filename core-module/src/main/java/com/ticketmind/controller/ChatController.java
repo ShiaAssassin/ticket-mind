@@ -8,6 +8,7 @@ import com.ticketmind.model.dto.ChatSessionListResponse;
 import com.ticketmind.service.impl.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,22 +25,24 @@ public class ChatController {
     private final ChatService chatService;
 
     @PostMapping
-    public Result<ChatResponse> chat(@RequestBody ChatRequest request) {
-        return Result.success(chatService.chat(request.sessionId(), request.message()));
+    public ResponseEntity<Result<ChatResponse>> chat(@RequestBody ChatRequest request) {
+        return ResponseEntity.ok(Result.success(chatService.chat(request.sessionId(), request.message())));
     }
 
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter stream(@RequestBody ChatRequest request) {
-        return chatService.stream(request.sessionId(), request.message());
+    public ResponseEntity<SseEmitter> stream(@RequestBody ChatRequest request) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.TEXT_EVENT_STREAM)
+                .body(chatService.stream(request.sessionId(), request.message()));
     }
 
     @GetMapping("/{sessionId}/messages")
-    public Result<ChatHistoryResponse> history(@PathVariable String sessionId) {
-        return Result.success(chatService.history(sessionId));
+    public ResponseEntity<Result<ChatHistoryResponse>> history(@PathVariable String sessionId) {
+        return ResponseEntity.ok(Result.success(chatService.history(sessionId)));
     }
 
     @GetMapping("/sessions")
-    public Result<ChatSessionListResponse> sessions() {
-        return Result.success(chatService.sessions());
+    public ResponseEntity<Result<ChatSessionListResponse>> sessions() {
+        return ResponseEntity.ok(Result.success(chatService.sessions()));
     }
 }
