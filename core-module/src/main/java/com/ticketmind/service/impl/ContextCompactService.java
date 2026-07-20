@@ -5,8 +5,12 @@ import com.knuddels.jtokkit.api.Encoding;
 import com.knuddels.jtokkit.api.EncodingType;
 import com.ticketmind.agent.core.SummaryAgent;
 import com.ticketmind.config.AgentProperties;
-import com.ticketmind.model.dto.MemoryMessage;
-import com.ticketmind.model.entity.MessageRole;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.ChatMessageType;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import dev.langchain4j.data.message.UserMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,10 +30,10 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Four-layer context compaction pipeline.
+ * Four-layer LangChain4j chat context compaction pipeline.
  *
  * <p>Execution order: large tool result spillover, message-count trimming,
- * earlier tool result placeholder compaction, full summary, emergency truncation.</p>
+ * earlier tool result placeholder compaction, summary, emergency truncation.</p>
  */
 @Slf4j
 @Service
@@ -49,12 +53,13 @@ public class ContextCompactService {
 
     private final AgentProperties properties;
 
-    public List<MemoryMessage> compact(String sessionId, List<MemoryMessage> messages) {
+    public List<ChatMessage> compact(Object memoryId, List<ChatMessage> messages) {
         if (messages == null || messages.isEmpty()) {
             return List.of();
         }
 
-        List<MemoryMessage> compacted = new ArrayList<>(messages);
+        List<ChatMessage> compacted = new ArrayList<>(messages);
+        String sessionId = memoryId == null ? null : memoryId.toString();
         compacted = toolResultBudget(sessionId, compacted);
         compacted = snipCompact(compacted);
         compacted = microCompact(compacted);
@@ -63,18 +68,18 @@ public class ContextCompactService {
         return compacted;
     }
 
-    public int countTokens(List<MemoryMessage> messages) {
+    public int countTokens(List<ChatMessage> messages) {
         return DEFAULT_ENCODING.countTokens(formatConversation(messages));
     }
 
-    private List<MemoryMessage> toolResultBudget(String sessionId, List<MemoryMessage> messages) {
+    private List<ChatMessage> toolResultBudget(String sessionId, List<ChatMessage> messages) {
         AgentProperties.ContextCompact config = config();
         int maxChars = Math.max(1, config.getToolResultMaxChars());
         Set<Integer> toolResultIndexes = toolResultIndexes(messages);
-        List<MemoryMessage> result = new ArrayList<>(messages.size());
+        List<ChatMessage> result = new ArrayList<>(messages.size());
 
         for (int i = 0; i < messages.size(); i++) {
-            MemoryMessage message = messages.get(i);
+            ChatMessage message = messages.get(i);
             String content = content(message);
             if (!toolResultIndexes.contains(i) || content.length() <= maxChars) {
                 result.add(message);
@@ -91,9 +96,9 @@ public class ContextCompactService {
         return result;
     }
 
-    private List<MemoryMessage> snipCompact(List<MemoryMessage> messages) {
+    private List<ChatMessage> snipCompact(List<ChatMessage> messages) {
         AgentProperties.ContextCompact config = config();
-        List<MemoryMessage> cleaned = deleteGarbageRounds(messages);
+        List<ChatMessage> cleaned = deleteGarbageRounds(messages);
         int threshold = Math.max(2, config.getMessageThreshold());
         if (cleaned.size() <= threshold) {
             return cleaned;
@@ -112,7 +117,7 @@ public class ContextCompactService {
         }
         protectToolPairs(cleaned, keep);
 
-        List<MemoryMessage> result = new ArrayList<>();
+        List<ChatMessage> result = new ArrayList<>();
         for (int i = 0; i < cleaned.size(); i++) {
             if (keep[i]) {
                 result.add(cleaned.get(i));
@@ -121,8 +126,7 @@ public class ContextCompactService {
         return result;
     }
 
-    private List<MemoryMessage> microCompact(
-            List<MemoryMessage> messages) {
+    private List<ChatMessage> microCompact(List<ChatMessage> messages) {
         AgentProperties.ContextCompact config = config();
         int keepRecent = Math.max(0, config.getRecentToolResultCount());
         Set<Integer> toolResultIndexes = toolResultIndexes(messages);
@@ -139,9 +143,9 @@ public class ContextCompactService {
             seen++;
         }
 
-        List<MemoryMessage> result = new ArrayList<>(messages.size());
+        List<ChatMessage> result = new ArrayList<>(messages.size());
         for (int i = 0; i < messages.size(); i++) {
-            MemoryMessage message = messages.get(i);
+            ChatMessage message = messages.get(i);
             if (toolResultIndexes.contains(i) && !recentToolResultIndexes.contains(i)) {
                 result.add(rewrite(message, config.getEarlierToolResultPlaceholder()));
             } else {
@@ -151,30 +155,35 @@ public class ContextCompactService {
         return result;
     }
 
-    private List<MemoryMessage> summarize(
-            List<MemoryMessage> messages) {
+    private List<ChatMessage> summarize(List<ChatMessage> messages) {
         int threshold = tokenThreshold();
         if (countTokens(messages) <= threshold) {
             return messages;
         }
 
+        int tailStart = summarizeTailStart(messages);
+        List<ChatMessage> historyToSummarize = messages.subList(0, tailStart);
+        List<ChatMessage> recentTail = messages.subList(tailStart, messages.size());
+        if (historyToSummarize.isEmpty()) {
+            return messages;
+        }
+
         try {
-            String summary = summaryAgent.summarize(formatConversation(messages));
+            String summary = summaryAgent.summarize(formatConversation(historyToSummarize));
             if (!StringUtils.hasText(summary)) {
                 return messages;
             }
-            return List.of(new MemoryMessage(
-                    MessageRole.SYSTEM,
-                    "上下文摘要:\n" + summary.strip()
-            ));
+            List<ChatMessage> result = new ArrayList<>(recentTail.size() + 1);
+            result.add(new SystemMessage("上下文摘要:\n" + summary.strip()));
+            result.addAll(recentTail);
+            return result;
         } catch (Exception exception) {
             log.warn("Context summary failed, emergency truncation will be used if still over threshold", exception);
             return messages;
         }
     }
 
-    private List<MemoryMessage> reactiveCompact(
-            List<MemoryMessage> messages) {
+    private List<ChatMessage> reactiveCompact(List<ChatMessage> messages) {
         int threshold = tokenThreshold();
         if (countTokens(messages) <= threshold) {
             return messages;
@@ -182,12 +191,12 @@ public class ContextCompactService {
 
         int targetTokens = Math.max(1, (int) Math.floor(threshold * emergencyTargetRatio()));
         List<MessageBlock> blocks = messageBlocks(messages);
-        List<MemoryMessage> selected = new ArrayList<>();
+        List<ChatMessage> selected = new ArrayList<>();
         int selectedTokens = 0;
 
         for (int i = blocks.size() - 1; i >= 0; i--) {
             MessageBlock block = blocks.get(i);
-            List<MemoryMessage> blockMessages = messages.subList(block.start(), block.end());
+            List<ChatMessage> blockMessages = messages.subList(block.start(), block.end());
             int blockTokens = countTokens(blockMessages);
             if (selectedTokens + blockTokens <= targetTokens) {
                 selected.addAll(0, blockMessages);
@@ -195,7 +204,7 @@ public class ContextCompactService {
                 continue;
             }
             if (selected.isEmpty() && block.size() == 1 && !isToolCall(messages.get(block.start()))) {
-                MemoryMessage truncated = truncateSingleMessage(messages.get(block.start()), targetTokens);
+                ChatMessage truncated = truncateSingleMessage(messages.get(block.start()), targetTokens);
                 if (countTokens(List.of(truncated)) <= targetTokens) {
                     selected.add(truncated);
                 }
@@ -206,8 +215,7 @@ public class ContextCompactService {
         return selected;
     }
 
-    private MemoryMessage truncateSingleMessage(MemoryMessage message,
-                                                                int targetTokens) {
+    private ChatMessage truncateSingleMessage(ChatMessage message, int targetTokens) {
         String content = content(message);
         String suffix = "\n[Context hard-truncated.]";
         int low = 0;
@@ -216,7 +224,7 @@ public class ContextCompactService {
 
         while (low <= high) {
             int mid = low + (high - low) / 2;
-            MemoryMessage candidate = rewrite(message, content.substring(content.length() - mid) + suffix);
+            ChatMessage candidate = rewrite(message, content.substring(content.length() - mid) + suffix);
             if (countTokens(List.of(candidate)) <= targetTokens) {
                 best = mid;
                 low = mid + 1;
@@ -227,25 +235,24 @@ public class ContextCompactService {
         return rewrite(message, content.substring(content.length() - best) + suffix);
     }
 
-    private List<MemoryMessage> deleteGarbageRounds(
-            List<MemoryMessage> messages) {
+    private List<ChatMessage> deleteGarbageRounds(List<ChatMessage> messages) {
         return messages.stream()
                 .filter(message -> !isGarbage(message))
                 .toList();
     }
 
-    private boolean isGarbage(MemoryMessage message) {
-        if (message == null || !StringUtils.hasText(message.content())) {
+    private boolean isGarbage(ChatMessage message) {
+        if (message == null || !StringUtils.hasText(content(message))) {
             return true;
         }
-        String normalized = message.content().strip().toLowerCase(Locale.ROOT);
+        String normalized = content(message).strip().toLowerCase(Locale.ROOT);
         return normalized.equals("null")
                 || normalized.equals("undefined")
                 || normalized.equals("{}")
                 || normalized.equals("[]");
     }
 
-    private void protectToolPairs(List<MemoryMessage> messages, boolean[] keep) {
+    private void protectToolPairs(List<ChatMessage> messages, boolean[] keep) {
         for (int i = 0; i < messages.size() - 1; i++) {
             if (!isToolCall(messages.get(i)) || !isToolResult(messages, i + 1)) {
                 continue;
@@ -257,7 +264,7 @@ public class ContextCompactService {
         }
     }
 
-    private Set<Integer> toolResultIndexes(List<MemoryMessage> messages) {
+    private Set<Integer> toolResultIndexes(List<ChatMessage> messages) {
         Set<Integer> indexes = new HashSet<>();
         for (int i = 0; i < messages.size(); i++) {
             if (isToolResult(messages, i)) {
@@ -267,7 +274,7 @@ public class ContextCompactService {
         return indexes;
     }
 
-    private List<MessageBlock> messageBlocks(List<MemoryMessage> messages) {
+    private List<MessageBlock> messageBlocks(List<ChatMessage> messages) {
         List<MessageBlock> blocks = new ArrayList<>();
         int index = 0;
         while (index < messages.size()) {
@@ -284,22 +291,37 @@ public class ContextCompactService {
         return blocks;
     }
 
-    private boolean isToolCall(MemoryMessage message) {
+    private int summarizeTailStart(List<ChatMessage> messages) {
+        int tailSize = Math.min(messages.size(), Math.max(4, config().getRecentToolResultCount() * 2 + 2));
+        int tailStart = messages.size() - tailSize;
+        while (tailStart > 0 && isToolResult(messages, tailStart) && isToolCall(messages.get(tailStart - 1))) {
+            tailStart--;
+        }
+        return tailStart;
+    }
+
+    private boolean isToolCall(ChatMessage message) {
+        if (message instanceof AiMessage aiMessage && aiMessage.hasToolExecutionRequests()) {
+            return true;
+        }
         return message != null && TOOL_CALL_PATTERN.matcher(content(message)).find();
     }
 
-    private boolean isToolResult(List<MemoryMessage> messages, int index) {
-        MemoryMessage message = messages.get(index);
+    private boolean isToolResult(List<ChatMessage> messages, int index) {
+        ChatMessage message = messages.get(index);
         if (message == null) {
             return false;
+        }
+        if (message.type() == ChatMessageType.TOOL_EXECUTION_RESULT) {
+            return true;
         }
         if (TOOL_RESULT_PATTERN.matcher(content(message)).find()) {
             return true;
         }
         return index > 0
                 && isToolCall(messages.get(index - 1))
-                && message.role() != MessageRole.USER
-                && StringUtils.hasText(message.content());
+                && message.type() != ChatMessageType.USER
+                && StringUtils.hasText(content(message));
     }
 
     private String storeToolResult(String sessionId, int index, String content) {
@@ -316,9 +338,9 @@ public class ContextCompactService {
         }
     }
 
-    private String formatConversation(List<MemoryMessage> messages) {
+    private String formatConversation(List<ChatMessage> messages) {
         StringBuilder builder = new StringBuilder();
-        for (MemoryMessage message : messages) {
+        for (ChatMessage message : messages) {
             builder.append(roleName(message))
                     .append(": ")
                     .append(content(message))
@@ -327,19 +349,52 @@ public class ContextCompactService {
         return builder.toString();
     }
 
-    private MemoryMessage rewrite(MemoryMessage message, String content) {
-        return new MemoryMessage(message.role(), content);
+    private ChatMessage rewrite(ChatMessage message, String content) {
+        if (message instanceof ToolExecutionResultMessage toolResult) {
+            return ToolExecutionResultMessage.from(toolResult.id(), toolResult.toolName(), content);
+        }
+        if (message instanceof SystemMessage) {
+            return new SystemMessage(content);
+        }
+        if (message instanceof UserMessage userMessage) {
+            return StringUtils.hasText(userMessage.name())
+                    ? new UserMessage(userMessage.name(), content)
+                    : new UserMessage(content);
+        }
+        if (message instanceof AiMessage aiMessage && !aiMessage.hasToolExecutionRequests()) {
+            return new AiMessage(content);
+        }
+        return new SystemMessage(content);
     }
 
-    private String roleName(MemoryMessage message) {
-        if (message == null || message.role() == null) {
+    private String roleName(ChatMessage message) {
+        if (message == null || message.type() == null) {
             return "UNKNOWN";
         }
-        return message.role().name();
+        return message.type().name();
     }
 
-    private String content(MemoryMessage message) {
-        return message == null || message.content() == null ? "" : message.content();
+    private String content(ChatMessage message) {
+        if (message == null) {
+            return "";
+        }
+        if (message instanceof SystemMessage systemMessage) {
+            return systemMessage.text();
+        }
+        if (message instanceof UserMessage userMessage) {
+            return userMessage.hasSingleText() ? userMessage.singleText() : userMessage.contents().toString();
+        }
+        if (message instanceof AiMessage aiMessage) {
+            String text = aiMessage.text() == null ? "" : aiMessage.text();
+            if (!aiMessage.hasToolExecutionRequests()) {
+                return text;
+            }
+            return text + "\nTOOL_CALLS: " + aiMessage.toolExecutionRequests();
+        }
+        if (message instanceof ToolExecutionResultMessage toolResult) {
+            return toolResult.text();
+        }
+        return message.toString();
     }
 
     private Path localStoreDirectory() {

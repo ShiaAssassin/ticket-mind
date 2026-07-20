@@ -11,8 +11,11 @@ import com.ticketmind.agent.tool.registry.NotifyTools;
 import com.ticketmind.agent.tool.registry.OrderTools;
 import com.ticketmind.agent.tool.registry.PlanTools;
 import com.ticketmind.agent.tool.registry.TicketInfoTools;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,6 +24,9 @@ public class AgentConfig {
 
     @Bean
     public TicketAgent ticketAgent(ChatModel chatModel,
+                                   StreamingChatModel streamingChatModel,
+                                   ChatMemoryStore chatMemoryStore,
+                                   AgentProperties properties,
                                    AccessTools accessTools,
                                    ExternalInfoTools externalInfoTools,
                                    OrderTools orderTools,
@@ -28,8 +34,20 @@ public class AgentConfig {
                                    TicketInfoTools ticketInfoTools) {
         return AiServices.builder(TicketAgent.class)
                 .chatModel(chatModel)
+                .streamingChatModel(streamingChatModel)
+                .chatMemoryProvider(memoryId -> MessageWindowChatMemory.builder()
+                        .id(memoryId)
+                        .maxMessages(chatMemoryMaxMessages(properties))
+                        .chatMemoryStore(chatMemoryStore)
+                        .build())
                 .tools(accessTools, externalInfoTools, orderTools, planTools, ticketInfoTools)
                 .build();
+    }
+
+    private int chatMemoryMaxMessages(AgentProperties properties) {
+        int configuredLimit = properties.getChat().getHistoryLimit() * 2 + 8;
+        int compactThreshold = properties.getContextCompact().getMessageThreshold() + 8;
+        return Math.max(16, Math.max(configuredLimit, compactThreshold));
     }
 
     @Bean

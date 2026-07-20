@@ -8,6 +8,16 @@ CREATE TABLE `chat_session` (
     PRIMARY KEY (`id`)
 );
 
+CREATE TABLE `chat_messages` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `session_id` BIGINT NOT NULL,
+    `role` VARCHAR(20) NOT NULL,
+    `content` LONGTEXT NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    PRIMARY KEY (`id`),
+    INDEX `idx_chat_messages_session_created` (`session_id`, `created_at`, `id`)
+);
+
 CREATE TABLE `knowledge_chunks` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
     `source` VARCHAR(180) NOT NULL,

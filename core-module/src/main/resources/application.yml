@@ -38,6 +38,11 @@ langchain4j:
       base-url: ${OPENAI_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
       model-name: ${OPENAI_MODEL:qwen-plus}
       temperature: ${OPENAI_TEMPERATURE:0.2}
+    streaming-chat-model:
+      api-key: ${OPENAI_API_KEY:}
+      base-url: ${OPENAI_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+      model-name: ${OPENAI_MODEL:qwen-plus}
+      temperature: ${OPENAI_TEMPERATURE:0.2}
     embedding-model:
       api-key: ${OPENAI_API_KEY:}
       base-url: ${OPENAI_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
